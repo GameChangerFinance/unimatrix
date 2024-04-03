@@ -6,7 +6,7 @@ On Unimatrix, each node reads and shares encrypted data over [GunDB](https://gun
 
 ## IMPORTANT
 
-This repository is under deep development, and all it's components are not ready yet to be used on projects. Module bundling is missing, as well as Cardano specific helpers.
+This repository is under deep development, documentation, examples, official npm package publishing and wallet-side updates after breaking changes are yet pending.
 
 Coming soon!
 

@@ -3,7 +3,9 @@ import {
   } from '../../src/index'
 
 import {describe, expect, test,beforeAll,afterAll, jest} from '@jest/globals'
-import {  DLTTag, NetworkTag, genVkWitnessHexKey, genTxHexKey, genTxHashesKey, cardanoValidatorsFactory } from '../../src/sync';
+import {  DLTTag, NetworkTag ,decryptDataFactory, encryptDataFactory, getTxHashes, getTxHex, getVkWitnessHex, onTxHashes, onTxHex, onVkWitnessHex, setTxHashes, setTxHex, setVkWitnessHex, genVkWitnessHexKey, genTxHexKey, genTxHashesKey, cardanoValidatorsFactory } from '../../src/sync';
+//import { LoadCSL } from '../../src/sync/CSL';
+import { getRandomInt,testDb,cleanDb, timeout } from '../common';
 // import * as CardanoLib from '@emurgo/cardano-serialization-lib-asmjs';
 import * as CardanoLib from '@emurgo/cardano-serialization-lib-nodejs';
 //import CardanoLib from '../../node_modules/@emurgo/cardano-serialization-lib-asmjs';
@@ -147,6 +149,27 @@ const testCase3={
     }        
 }
 
+//insecure
+const testCase4={
+    ...multisig2,
+    id:'multisig_1234',
+    validator:'cardano.TxHashHexList',
+    dltTag:<DLTTag>multisig1.dltTag,
+    networkTag:<NetworkTag>multisig1.networkTag,
+    txHashes:multisig2.transactions.map(x=>x.txHash),
+    subPath:undefined,
+    dataKey:{
+        key: '8d8cda66a7dc56e57c8d7ed715e417b15a9d0aaf1c30602aca3c91ba81b63d798c6f1ed8daf9828f6dc7a402f3a3a27d84d6d03fdd2f90ada94155c0d65080fa',
+        path: 'multisig_1234:cardano.TxHashHexList:cardano/preprod'
+    },      
+    store:{
+        file:{
+            "data": multisig2.transactions.map(x=>x.txHash),                                             
+            "error": undefined
+        },
+        updatedAt:Date.now(),
+    }        
+}
 
 
 describe('generate hashes', () => {
@@ -213,6 +236,7 @@ describe('generate hashes', () => {
 });
  
 
+
 describe('validate data', () => {
     
     const validators=cardanoValidatorsFactory(CardanoLib)
@@ -256,4 +280,392 @@ describe('validate data', () => {
     }); 
 
 });
- 
+
+
+
+
+describe('encrypt and decrypt data', () => {
+    test('using Cardano Lib', () => {
+        const testCase=testCase1;
+        const encryptDataFn=encryptDataFactory(CardanoLib);
+        const decryptDataFn=decryptDataFactory(CardanoLib);
+        const encryptedStore=encryptDataFn({
+        id:testCase.id,
+        validator:testCase.validator,
+        path:testCase.path,
+        store:testCase1.store,
+        //file:testCase1.file,
+        //updatedAt:testCase.updatedAt,
+        });
+        const decryptedStore=decryptDataFn({
+        id:testCase.id,
+        validator:testCase.validator,
+        path:testCase.path,
+        store:encryptedStore,
+        //file:encryptedStore,
+        });
+        expect(decryptedStore).toEqual(testCase.store)
+    });
+});
+
+
+
+// async tests ahead...
+
+jest.setTimeout(timeout);
+describe('with connection to Unimatrix', () => {
+    beforeAll(async () => {
+      await cleanDb();
+    });
+    describe('1 cardano transaction signature being', () => {
+        const testCase={...testCase1};
+        //lets patch test case for concurrent processes running these tests across the globe 
+        testCase.id=`${testCase.id}_${String(getRandomInt(0,999999999))}_${String(Date.now())}`;
+
+        test('shared', async ()=> {
+            let db=testDb();
+            const params={
+                id:testCase.id,
+                dltTag:testCase.dltTag,
+                networkTag:testCase.networkTag,
+                txHash:testCase.txHash,
+                vkHash:testCase.vkHash, 
+                vkWitnessHex:testCase.vkWitnessHex,
+            }
+            const setOkResponse=await setVkWitnessHex({
+                CSL:CardanoLib,
+                db,
+                ...params
+            });
+            //console.dir({getOkResponse,params})
+            expect(setOkResponse).toBeTruthy();
+            expect(setOkResponse?.vkWitnessHex).toBe(testCase.vkWitnessHex);
+            expect(setOkResponse?.store?.file).toEqual(testCase.store.file);
+            expect(setOkResponse?.store?.updatedAt).toBeGreaterThan(0);
+            //(db as any)=undefined;
+        });
+
+
+        test('listened',(done)=> {
+            let db=testDb();
+            const params={
+                id:testCase.id,
+                dltTag:testCase.dltTag,
+                networkTag:testCase.networkTag,
+                txHash:testCase.txHash,       
+                vkHash:testCase.vkHash, 
+            }
+
+            setVkWitnessHex({
+                CSL:CardanoLib,
+                db,
+                ...params,
+                vkWitnessHex:testCase.vkWitnessHex,
+            }).then(()=>{
+                onVkWitnessHex({
+                    CSL:CardanoLib,
+                    db,
+                    ...params,
+                    cb:(event)=>{
+                        if(event?.vkWitnessHex){
+                            expect(event).toBeTruthy();
+                            expect(event?.vkWitnessHex).toBe(testCase.vkWitnessHex);
+                            expect(event?.store?.file).toEqual(testCase.store.file);
+                            expect(event?.store?.updatedAt).toBeGreaterThan(0);
+                            event.stop();
+                            done();
+                        }
+                    }
+                });
+            });
+        
+        });
+
+        test('fetched', async ()=> {
+            let db=testDb();
+            const params={
+                id:testCase.id,
+                dltTag:testCase.dltTag,
+                networkTag:testCase.networkTag,
+                txHash:testCase.txHash,
+                vkHash:testCase.vkHash, 
+            }
+            const getOkResponse=await getVkWitnessHex({
+                CSL:CardanoLib,
+                db,
+                ...params
+            });
+            //console.dir({getOkResponse,params})
+            expect(getOkResponse).toBeTruthy();
+            expect(getOkResponse?.vkWitnessHex).toBe(testCase.vkWitnessHex);
+            expect(getOkResponse?.store?.file).toEqual(testCase.store.file);
+            expect(getOkResponse?.store?.updatedAt).toBeGreaterThan(0);
+            //(db as any)=undefined;
+        });
+
+    });
+
+
+
+
+    describe('1 cardano transaction being', () => {
+        const testCase={...testCase2};
+        //lets patch test case for concurrent processes running these tests across the globe 
+        testCase.id=`${testCase.id}_${String(getRandomInt(0,999999999))}_${String(Date.now())}`;
+
+        test('shared', async ()=> {
+            let db=testDb();
+            const params={
+                id:testCase.id,
+                dltTag:testCase.dltTag,
+                networkTag:testCase.networkTag,
+                txHash:testCase.txHash,        
+                txHex:testCase.txHex,
+            }
+            const setOkResponse=await setTxHex({
+                CSL:CardanoLib,
+                db,
+                ...params
+            });
+            //console.dir({getOkResponse,params})
+            expect(setOkResponse).toBeTruthy();
+            expect(setOkResponse?.txHex).toBe(testCase.txHex);
+            expect(setOkResponse?.store?.file).toEqual(testCase.store.file);
+            expect(setOkResponse?.store?.updatedAt).toBeGreaterThan(0);
+            //(db as any)=undefined;
+        });
+
+
+        test('listened',(done)=> {
+            let db=testDb();
+            const params={
+                id:testCase.id,
+                dltTag:testCase.dltTag,
+                networkTag:testCase.networkTag,
+                txHash:testCase.txHash,       
+            }
+
+            setTxHex({
+                CSL:CardanoLib,
+                db,
+                ...params,
+                txHex:testCase.txHex,
+            }).then(()=>{
+                onTxHex({
+                    CSL:CardanoLib,
+                    db,
+                    ...params,
+                    cb:(event)=>{
+                        if(event?.txHex){
+                            expect(event).toBeTruthy();
+                            expect(event?.txHex).toBe(testCase.txHex);
+                            expect(event?.store?.file).toEqual(testCase.store.file);
+                            expect(event?.store?.updatedAt).toBeGreaterThan(0);
+                            event.stop();
+                            done();
+                        }
+                    }
+                });
+            });
+        
+        });
+
+
+
+        test('fetched', async ()=> {
+            let db=testDb();
+            const params={
+                id:testCase.id,
+                dltTag:testCase.dltTag,
+                networkTag:testCase.networkTag,
+                txHash:testCase.txHash,        
+            }
+            const getOkResponse=await getTxHex({
+                CSL:CardanoLib,
+                db,
+                ...params
+            });
+            //console.dir({getOkResponse,params})
+            expect(getOkResponse).toBeTruthy();
+            expect(getOkResponse?.txHex).toBe(testCase.txHex);
+            expect(getOkResponse?.store?.file).toEqual(testCase.store.file);
+            expect(getOkResponse?.store?.updatedAt).toBeGreaterThan(0);
+            //(db as any)=undefined;
+        });
+    });
+
+
+
+
+    describe('3 cardano transactions hashes being', () => {
+        const testCase={...testCase3};
+        //lets patch test case for concurrent processes running these tests across the globe 
+        testCase.id=`${testCase.id}_${String(getRandomInt(0,999999999))}_${String(Date.now())}`;
+
+        test('announced', async ()=> {
+            let db=testDb();
+            const params={
+                id:testCase.id,
+                dltTag:testCase.dltTag,
+                networkTag:testCase.networkTag,
+                txHashes:testCase.txHashes,
+                subPath:testCase.subPath,
+            }
+            const setOkResponse=await setTxHashes({
+                CSL:CardanoLib,
+                db,
+                ...params
+            });
+            //console.dir({getOkResponse,params})
+            expect(setOkResponse).toBeTruthy();
+            expect(setOkResponse?.txHashes).toEqual(testCase.txHashes);
+            expect(setOkResponse?.store?.file).toEqual(testCase.store.file);
+            expect(setOkResponse?.store?.updatedAt).toBeGreaterThan(0);
+            //(db as any)=undefined;
+        });
+
+        test('fetched', async ()=> {
+            let db=testDb();
+            const params={
+                id:testCase.id,
+                dltTag:testCase.dltTag,
+                networkTag:testCase.networkTag,
+                subPath:testCase.subPath,    
+            }
+            const getOkResponse=await getTxHashes({
+                CSL:CardanoLib,
+                db,
+                ...params
+            });
+            //console.dir({getOkResponse,params})
+            expect(getOkResponse).toBeTruthy();
+            expect(getOkResponse?.txHashes).toEqual(testCase.txHashes);
+            expect(getOkResponse?.store?.file).toEqual(testCase.store.file);
+            expect(getOkResponse?.store?.updatedAt).toBeGreaterThan(0);
+            //(db as any)=undefined;
+        });
+
+
+        test('listened',(done)=> {
+            let db=testDb();
+            const params={
+                id:testCase.id,
+                dltTag:testCase.dltTag,
+                networkTag:testCase.networkTag,
+                subPath:testCase.subPath,    
+            }
+
+            setTxHashes({
+                CSL:CardanoLib,
+                db,
+                ...params,
+                txHashes:testCase.txHashes,
+            }).then(()=>{
+                onTxHashes({
+                    CSL:CardanoLib,
+                    db,
+                    ...params,
+                    cb:(event)=>{
+                        if(event?.txHashes){
+                            expect(event).toBeTruthy();
+                            expect(event?.txHashes).toEqual(testCase.txHashes);
+                            expect(event?.store?.file).toEqual(testCase.store.file);
+                            expect(event?.store?.updatedAt).toBeGreaterThan(0);
+                            event.stop();
+                            done();
+                        }
+                    }
+                });
+            });
+        
+        });
+    });
+
+
+
+
+    describe('3 cardano transaction hashes being', () => {
+        const testCase={...testCase4};
+        //lets patch test case for concurrent processes running these tests across the globe 
+        testCase.id=`${testCase.id}_${String(getRandomInt(0,999999999))}_${String(Date.now())}`;
+
+        test('announced without sub paths', async ()=> {
+            let db=testDb();
+            const params={
+                id:testCase.id,
+                dltTag:testCase.dltTag,
+                networkTag:testCase.networkTag,
+                txHashes:testCase.txHashes,
+                subPath:testCase.subPath,
+            }
+            const setOkResponse=await setTxHashes({
+                CSL:CardanoLib,
+                db,
+                ...params
+            });
+            //console.dir({getOkResponse,params})
+            expect(setOkResponse).toBeTruthy();
+            expect(setOkResponse?.txHashes).toEqual(testCase.txHashes);
+            expect(setOkResponse?.store?.file).toEqual(testCase.store.file);
+            expect(setOkResponse?.store?.updatedAt).toBeGreaterThan(0);
+            //(db as any)=undefined;
+        });
+
+        test('fetched without sub paths', async ()=> {
+            let db=testDb();
+            const params={
+                id:testCase.id,
+                dltTag:testCase.dltTag,
+                networkTag:testCase.networkTag,
+                subPath:testCase.subPath,    
+            }
+            const getOkResponse=await getTxHashes({
+                CSL:CardanoLib,
+                db,
+                ...params
+            });
+            //console.dir({getOkResponse,params})
+            expect(getOkResponse).toBeTruthy();
+            expect(getOkResponse?.txHashes).toEqual(testCase.txHashes);
+            expect(getOkResponse?.store?.file).toEqual(testCase.store.file);
+            expect(getOkResponse?.store?.updatedAt).toBeGreaterThan(0);
+            //(db as any)=undefined;
+        });
+
+
+
+        test('listened without sub paths',(done)=> {
+            let db=testDb();
+            const params={
+                id:testCase.id,
+                dltTag:testCase.dltTag,
+                networkTag:testCase.networkTag,
+                subPath:testCase.subPath,    
+            }
+            setTxHashes({
+                CSL:CardanoLib,
+                db,
+                ...params,
+                txHashes:testCase.txHashes,
+            }).then(()=>{
+                onTxHashes({
+                    CSL:CardanoLib,
+                    db,
+                    ...params,
+                    cb:(event)=>{
+                        if(event?.txHashes){
+                            expect(event).toBeTruthy();
+                            expect(event?.txHashes).toEqual(testCase.txHashes);
+                            expect(event?.store?.file).toEqual(testCase.store.file);
+                            expect(event?.store?.updatedAt).toBeGreaterThan(0);
+                            event.stop();
+                            done();
+                        }
+                    }
+                });
+            });
+        
+        });
+
+    });
+});

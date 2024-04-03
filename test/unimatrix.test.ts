@@ -14,7 +14,7 @@ import aes from 'crypto-js/aes'; // lib is using native crypto API nowdays
 import Utf8 from 'crypto-js/enc-utf8'; // lib is using native crypto API nowdays
 //const crypto = require('crypto');
 import {describe, expect, test,beforeAll,afterAll, jest} from '@jest/globals'
-import { getRandomInt,testDb, timeout } from './common';
+import { cleanDb, getRandomInt,testDb, timeout } from './common';
 
 
 const testEncryptionFn:UnimatrixEncryptFn=(args)=>{
@@ -199,6 +199,7 @@ jest.setTimeout(timeout);
 
 describe('with connection to Unimatrix', () => {
   beforeAll(async () => {
+    await cleanDb();
   });
   describe('set and get data', () => {
     test('using right secrets', async ()=> {

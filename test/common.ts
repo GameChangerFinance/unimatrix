@@ -59,4 +59,5 @@ export const testDb=()=>{
     return db;
 }
 
+export const cleanDb=()=>execShellCommand('tools/gunCleanup.sh');
 

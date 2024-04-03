@@ -1,22 +1,32 @@
 /**
  * Unimatrix Sync library for Cardano
  * 
- * A set of helpers to standarize a basic data exchange protocol 
+ * A set of helpers to standardize a basic data exchange protocol 
  * to share Cardano transactions and signatures using Unimatrix
  * 
- * Main usecase are multi-signature or deferred-signature scenarios
+ * Main use case are multi-signature or deferred-signature scenarios
  * involving wallets, dapps and services
  * 
  */
 
-import {genDataKey,UnimatrixValidatorFnArgs, UnimatrixValidatorMap} from  '../unimatrix';
-import {logger} from '../common';
+import {genDataKey,getData,GET_TIMEOUT_MS,onData,setData, UnimatrixDataStore, UnimatrixDecryptFn, UnimatrixEncryptFn, UnimatrixUserError, UnimatrixValidatorFn,UnimatrixValidatorFnArgs, UnimatrixValidatorMap} from  '../unimatrix';
+import { JSONStringify, logger,UnimatrixDB, UnimatrixDBDataNode } from '../common';
 import sha512 from 'crypto-js/sha512';
+import crypto from 'crypto';
 
 export type DLTTag              = "cardano" | "forkano" | "guild" | "shareslake"
 export type NetworkTag          = "mainnet" | "preprod" | "preview" | "legacy"
 export type CardanoValidatorTag = 'sha512' | 'cardano.TxHashHexList' | 'cardano.vkWitnessHex' | 'cardano.txHex';
+
+//export const defaultTimeoutMs   =1000*5;//5 seconds
+export const SALT_SIZE          = 32
+export const NONCE_SIZE         = 12
+
 export type CardanoSerializationLib = any;
+
+export function randomBytes(size:number) {
+	return Buffer.from(crypto.getRandomValues(new Uint8Array(size)))
+}
 
 export const genUnimatrixIdFromTxHashes=(txHashes:string[])=>{
     const data=txHashes
@@ -24,6 +34,65 @@ export const genUnimatrixIdFromTxHashes=(txHashes:string[])=>{
     .sort()
     .join('-');
     return sha512(data).toString();
+}
+
+export const encryptDataFactory=(CSL:any):UnimatrixEncryptFn=>(args)=>{
+    try{
+        if(!CSL)
+            throw new Error("Missing CSL");
+        if(args.path.length<=0 || !args.id || !args.validator)
+            throw new Error(`Missing parts`);
+        if( args.path.some(x=>!x.trim()) )
+            throw new Error(`Path items cannot be empty`);         
+        let _CardanoWasm=CSL;                       
+        const json      =JSONStringify(args.store.file);
+        const idHash    =sha512(args.id).toString();
+        const publicDataHex=Buffer.from(
+            JSONStringify({updatedAt:args.store.updatedAt})
+        ).toString('hex');
+        const password  =`${idHash}:${publicDataHex}:${args.validator}:${args.path.join('/')}`;
+        const salt      =randomBytes(SALT_SIZE);
+        const nonce     =randomBytes(NONCE_SIZE);   
+        const cypherHex =_CardanoWasm.encrypt_with_password(
+            Buffer.from(password).toString('hex'),
+            Buffer.from(salt).toString('hex'),
+            Buffer.from(nonce).toString('hex'),
+            Buffer.from(json).toString('hex')
+        );        
+        const file=`${publicDataHex}:${cypherHex}`;
+        return file;
+    }catch(err){
+        throw new Error(`Unimatrix encryption error: ${err}`);
+    }    
+}
+export const decryptDataFactory=(CSL:any):UnimatrixDecryptFn=>(args)=>{
+    try{
+        if(!CSL)
+            throw new Error("Missing CSL");
+        if(args.path.length<=0 || !args.id || !args.validator)
+            throw new Error(`Missing parts`);
+        if( args.path.some(x=>!x.trim()) )
+            throw new Error(`Path items cannot be empty`);         
+        if(typeof args.store !== "string")
+            throw new Error(`Invalid storage`);             
+        const [publicDataHex,cypherHex]=(args.store||"").split(':');
+        if(!cypherHex)
+            throw new Error(`Missing encrypted data`);             
+        if(!publicDataHex)
+            throw new Error(`Missing public data`);
+        
+        const idHash    =sha512(args.id).toString();                
+        const password  =`${idHash}:${publicDataHex}:${args.validator}:${args.path.join('/')}`;
+        const jsonHex   =CSL.decrypt_with_password(
+            Buffer.from(password).toString('hex'),
+            cypherHex
+        );
+        const file=JSON.parse(Buffer.from(jsonHex,"hex").toString());        
+        const {updatedAt}=JSON.parse(Buffer.from(publicDataHex,"hex").toString())||{};
+        return {file,updatedAt};
+    }catch(err){
+        throw new Error(`Unimatrix decryption error: ${err}`);
+    }    
 }
 
 /**
@@ -75,7 +144,6 @@ export const verifyVkWitnessHex=(args:{
 
 
 export const cardanoValidatorsFactory=(CSL:any):UnimatrixValidatorMap=>({
-    //'sha512'                     :(args:UnimatrixValidatorFnArgs)=>{return "TODO"},
     'cardano.TxHashHexList':(args:UnimatrixValidatorFnArgs)=>{  
         if(args?.store.file?.error && typeof args?.store.file?.error!=="string")
             return "Invalid error type";
@@ -131,9 +199,9 @@ export const cardanoValidatorsFactory=(CSL:any):UnimatrixValidatorMap=>({
 
 
 
+
 ////////////  vkWitnessHex ////////////////
 
-//file:{data:vkWitnessHex,error:undefined},
 export const genVkWitnessHexKey=(args:{
     id:string,
     dltTag:DLTTag,
@@ -146,11 +214,129 @@ export const genVkWitnessHexKey=(args:{
     path:[args.dltTag,args.networkTag,args.txHash,args.vkHash],
 });
 
+export const onVkWitnessHex=async (args:{
+    CSL:CardanoSerializationLib,
+    db:UnimatrixDB,
+    id:string,
+    dltTag:DLTTag,
+    networkTag:NetworkTag,
+    txHash:string,
+    vkHash:string,
+    timeout?:number,
+    cb:(args:{
+        vkWitnessHex?:string,
+        store?:UnimatrixDataStore,
+        validationError?:string,
+        userError?:string,
+        timeoutError?:boolean,
+        node:UnimatrixDBDataNode<string>,
+        stop:()=>void,
+    })=>void,
+})=>onData({
+    //basic
+    db:args.db,
+    timeout:args?.timeout,
+
+    //specific
+    id:args.id,
+    validator:'cardano.vkWitnessHex',
+    validators:cardanoValidatorsFactory(args.CSL),
+    path:[args.dltTag,args.networkTag,args.txHash,args.vkHash],    
+    encryptData:encryptDataFactory(args.CSL),
+    decryptData:decryptDataFactory(args.CSL),
+    on:({store,validationError,timeoutError,userError,node,stop})=>{
+        const vkWitnessHex=(!!store?.file?.data && typeof store?.file?.data ==="string")
+            ?store?.file?.data
+            :undefined;
+        return args.cb({vkWitnessHex,store,validationError,timeoutError,userError,node,stop});
+    },
+});
+
+export const getVkWitnessHex=async (args:{
+    CSL:CardanoSerializationLib,
+    db:UnimatrixDB,
+    id:string,
+    dltTag:DLTTag,
+    networkTag:NetworkTag,
+    txHash:string,
+    vkHash:string,
+    timeout?:number,
+})=>getData({
+    //basic
+    db:args.db,
+    timeout:args?.timeout,  
+    throwValidationErrors:!false,
+    throwUserErrors:!false,
+    throwTimeoutErrors:!false,
+    //specific
+    id:args.id,
+    validator:'cardano.vkWitnessHex',
+    validators:cardanoValidatorsFactory(args.CSL),
+    path:[args.dltTag,args.networkTag,args.txHash,args.vkHash],    
+    encryptData:encryptDataFactory(args.CSL),
+    decryptData:decryptDataFactory(args.CSL),
+})
+.then(store=>{
+    const vkWitnessHex=(!!store?.file?.data && typeof store?.file?.data ==="string")
+        ?store?.file?.data
+        :undefined;
+    return {
+        store,
+        vkWitnessHex,
+    };
+});
+
+export const setVkWitnessHex=async (args:{
+    CSL:CardanoSerializationLib,
+    db:UnimatrixDB,
+    id:string,
+    txHash:string,
+    vkHash:string,
+    networkTag:NetworkTag,
+    dltTag:DLTTag,
+    vkWitnessHex?:string,
+    error?:UnimatrixUserError,
+})=>setData({
+    //basic
+    db:args.db,
+    checkByFetching:false,    
+    //specific
+    id:args.id,
+    validator:'cardano.vkWitnessHex',
+    validators:cardanoValidatorsFactory(args.CSL),
+    path:[args.dltTag,args.networkTag,args.txHash,args.vkHash],
+    store:{
+        file:!!args.error
+        ?{
+            data:undefined,
+            error:args.error
+        }
+        :{
+            data:args.vkWitnessHex,
+            error:undefined
+        },
+        updatedAt:Date.now(),
+    },
+    encryptData:encryptDataFactory(args.CSL),
+    decryptData:decryptDataFactory(args.CSL),
+})
+.then(store=>{
+    const vkWitnessHex=(!!store?.file?.data && typeof store?.file?.data ==="string")
+        ?store?.file?.data
+        :undefined;
+    return {
+        store,
+        vkWitnessHex,
+    };
+});
+
+
+
+
 
 ////////////  txHex ////////////////
 
 
-//file:{data:txHex,error:undefined},                
 export const genTxHexKey=(args:{
     id:string,
     dltTag:DLTTag,
@@ -162,9 +348,126 @@ export const genTxHexKey=(args:{
     path:[args.dltTag,args.networkTag,args.txHash],
 });
 
+
+export const onTxHex=async (args:{
+    CSL:CardanoSerializationLib,
+    db:UnimatrixDB,
+    id:string,
+    dltTag:DLTTag,
+    networkTag:NetworkTag,
+    txHash:string,
+    timeout?:number,
+    cb:(args:{
+        txHex?:string,
+        store?:UnimatrixDataStore,
+        validationError?:string,
+        userError?:string,
+        timeoutError?:boolean,
+        node:UnimatrixDBDataNode<string>,
+        stop:()=>void,
+    })=>void,
+})=>onData({
+    //basic
+    db:args.db,
+    timeout:args?.timeout,
+
+    //specific
+    id:args.id,
+    validator:'cardano.txHex',
+    validators:cardanoValidatorsFactory(args.CSL),
+    path:[args.dltTag,args.networkTag,args.txHash],    
+    encryptData:encryptDataFactory(args.CSL),
+    decryptData:decryptDataFactory(args.CSL),
+    on:({store,validationError,timeoutError,userError,node,stop})=>{
+        const txHex=(!!store?.file?.data && typeof store?.file?.data ==="string")
+            ?store?.file?.data
+            :undefined;
+        return args.cb({txHex,store,validationError,timeoutError,userError,node,stop});
+    },
+});
+
+
+export const getTxHex=async (args:{
+    CSL:CardanoSerializationLib,
+    db:UnimatrixDB,
+    id:string,
+    dltTag:DLTTag,
+    networkTag:NetworkTag,
+    txHash:string,
+    timeout?:number,  
+})=>getData({
+    //basic
+    db:args.db,
+    timeout:args?.timeout,  
+    throwValidationErrors:!false,
+    throwUserErrors:!false,
+    throwTimeoutErrors:!false,
+    //specific
+    id:args.id,
+    validator:'cardano.txHex',
+    validators:cardanoValidatorsFactory(args.CSL),
+    path:[args.dltTag,args.networkTag,args.txHash],    
+    encryptData:encryptDataFactory(args.CSL),
+    decryptData:decryptDataFactory(args.CSL),
+})
+.then(store=>{
+    const txHex=(!!store?.file?.data && typeof store?.file?.data ==="string")
+        ?store?.file?.data
+        :undefined;
+    return {
+        store,
+        txHex,
+    };
+});
+
+export const setTxHex=async (args:{
+    CSL:CardanoSerializationLib,
+    db:UnimatrixDB,
+    id:string,
+    txHash:string,    
+    networkTag:NetworkTag,
+    dltTag:DLTTag,
+    txHex?:string,
+    error?:UnimatrixUserError,
+})=>setData({
+    //basic
+    db:args.db,
+    checkByFetching:false,    
+    //specific
+    id:args.id,
+    validator:'cardano.txHex',
+    validators:cardanoValidatorsFactory(args.CSL),
+    path:[args.dltTag,args.networkTag,args.txHash],
+    store:{
+        file:!!args.error
+        ?{
+            data:undefined,
+            error:args.error
+        }
+        :{
+            data:args.txHex,
+            error:undefined
+        },
+        updatedAt:Date.now(),
+    },
+    encryptData:encryptDataFactory(args.CSL),
+    decryptData:decryptDataFactory(args.CSL),
+})
+.then(store=>{
+    const txHex=(!!store?.file?.data && typeof store?.file?.data ==="string")
+        ?store?.file?.data
+        :undefined;
+    return {
+        store,
+        txHex,
+    };
+});
+
+
+
+
 ////////////  TxHashHexList ////////////////
 
-//file:{data:txHashList,error:undefined},
 export const genTxHashesKey=(args:{
     id:string,//getUnimatrixIdFromTxHashes(txHashList)
     dltTag:DLTTag,
@@ -177,3 +480,123 @@ export const genTxHashesKey=(args:{
 });
 
 
+
+export const onTxHashes=async (args:{
+    CSL:CardanoSerializationLib,
+    db:UnimatrixDB,
+    id:string,
+    dltTag:DLTTag,
+    networkTag:NetworkTag,
+    subPath?:string[],
+    timeout?:number,
+    cb:(args:{
+        txHashes?:string[],
+        store?:UnimatrixDataStore,
+        validationError?:string,
+        userError?:string,
+        timeoutError?:boolean,
+        node:UnimatrixDBDataNode<any>,
+        stop:()=>void,
+    })=>void,
+})=>onData({
+    //basic
+    db:args.db,
+    timeout:args?.timeout,
+    //specific
+    id:args.id,
+    validator:'cardano.TxHashHexList',
+    validators:cardanoValidatorsFactory(args.CSL),
+    path:[args.dltTag,args.networkTag,...args.subPath||[]],    
+    encryptData:encryptDataFactory(args.CSL),
+    decryptData:decryptDataFactory(args.CSL),
+    on:({store,validationError,timeoutError,userError,node,stop})=>{
+        const txHashes=(!!store?.file?.data 
+                && Array.isArray(store?.file?.data) 
+                && (<Array<unknown>>store?.file?.data).every(x=>(!!x && typeof x ==="string")))
+            ?store?.file?.data
+            :undefined;
+        return args.cb({txHashes,store,validationError,timeoutError,userError,node,stop});
+    },
+});
+
+
+export const getTxHashes=async (args:{
+    CSL:CardanoSerializationLib,
+    db:UnimatrixDB,
+    id:string,
+    dltTag:DLTTag,
+    networkTag:NetworkTag,
+    subPath?:string[],
+    timeout?:number,  
+})=>getData({
+    //basic
+    db:args.db,
+    timeout:args?.timeout,  
+    throwValidationErrors:!false,
+    throwUserErrors:!false,
+    throwTimeoutErrors:!false,
+    //specific
+    id:args.id,
+    validator:'cardano.TxHashHexList',
+    validators:cardanoValidatorsFactory(args.CSL),
+    path:[args.dltTag,args.networkTag,...args.subPath||[]],    
+    encryptData:encryptDataFactory(args.CSL),
+    decryptData:decryptDataFactory(args.CSL),
+})
+.then(store=>{
+    const txHashes=(!!store?.file?.data 
+            && Array.isArray(store?.file?.data) 
+            && (<Array<unknown>>store?.file?.data).every(x=>(!!x && typeof x ==="string")))
+        ?store?.file?.data
+        :undefined;
+
+    return {
+        store,
+        txHashes,
+    };
+});
+
+export const setTxHashes=async (args:{
+    CSL:CardanoSerializationLib,
+    db:UnimatrixDB,
+    id:string,
+    networkTag:NetworkTag,
+    dltTag:DLTTag,
+    txHashes?:string[],
+    subPath?:string[],
+    error?:UnimatrixUserError,
+})=>setData({
+    //basic
+    db:args.db,
+    checkByFetching:false,    
+    //specific
+    id:args.id,
+    validator:'cardano.TxHashHexList',
+    validators:cardanoValidatorsFactory(args.CSL),
+    path:[args.dltTag,args.networkTag,...args.subPath||[]],    
+    store:{
+        file:!!args.error
+        ?{
+            data:undefined,
+            error:args.error
+        }
+        :{
+            data:args.txHashes,
+            error:undefined
+        },
+        updatedAt:Date.now(),
+    },
+    encryptData:encryptDataFactory(args.CSL),
+    decryptData:decryptDataFactory(args.CSL),
+})
+.then(store=>{
+    const txHashes=(!!store?.file?.data 
+            && Array.isArray(store?.file?.data) 
+            && (<Array<unknown>>store?.file?.data).every(x=>(!!x && typeof x ==="string")))
+        ?store?.file?.data
+        :undefined;
+    return {
+        store,
+        txHashes,
+    };
+});

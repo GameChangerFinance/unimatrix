@@ -63,7 +63,7 @@ export const GET_TIMEOUT_MS = 1000*10;
  * Validators naming convention:
  * 
  * - those starting in uppercase are (Item) Announcements, where path is not used to verify data integrity
- * - those starting in lowecase are Items, where standarized path is used to verify data integrity
+ * - those starting in lowercase are Items, where standardized path is used to verify data integrity
  *
 */
 export type UnimatrixValidatorTag = string;
@@ -81,29 +81,22 @@ export type UnimatrixDataStore={
 };
 export type UnimatrixEncryptedDataStore = string;
 export type UnimatrixValidatorFnArgs = {
-    //CSL:any,
     id:string,
     validator:UnimatrixValidatorTag,
     path:string[],
     store:UnimatrixDataStore,
-    // file:UnimatrixData,
-    // updatedAt:number,
 }
 export type UnimatrixValidatorFn =(args:UnimatrixValidatorFnArgs)=>true|string;
 export type UnimatrixValidatorMap={[validatorTag:string]:UnimatrixValidatorFn};
 
 export type UnimatrixEncryptFn=(args:{
-    //CSL:any,
     id:string,
     validator:UnimatrixValidatorTag,
     path:string[],
     store:UnimatrixDataStore,
-    // file:UnimatrixData,
-    // updatedAt:number,
 })=>string;
 
 export type UnimatrixDecryptFn=(args:{
-    //CSL:any,
     id:string,
     validator:UnimatrixValidatorTag,
     path:string[],
@@ -130,7 +123,6 @@ export const genDataKey=(args:{
 
 
 export const onData=(args:{
-    //CSL:any,
     db:UnimatrixDB,
     id:string,
     validator:UnimatrixValidatorTag,
@@ -138,8 +130,8 @@ export const onData=(args:{
     path:string[],        
     change?:boolean,
     timeout?:number,
-    encryptData:UnimatrixEncryptFn,
-    decryptData: UnimatrixDecryptFn,
+    encryptData:UnimatrixEncryptFn,//normalized args, but currently not required
+    decryptData:UnimatrixDecryptFn,
     on:(args:{
         store?:UnimatrixDataStore,
         validationError?:string,
@@ -152,8 +144,6 @@ export const onData=(args:{
 
     if(!args.db)
         throw new Error("Missing GunDb connection");            
-    // if(!args.CSL)
-    //     throw new Error("Missing CSL");
     if(!args.validators)
         throw new Error("Missing validator definitions");
     if(!args.validator)
@@ -252,14 +242,13 @@ export const onData=(args:{
 }
 
 export const getData=async (args:{
-    //CSL:any,
     db:UnimatrixDB,
     id:string,
     validator:UnimatrixValidatorTag,
     validators:UnimatrixValidatorMap,
     path:string[],
     throwValidationErrors?:boolean
-    throwIncommingErrors?:boolean
+    throwUserErrors?:boolean
     throwTimeoutErrors?:boolean
     timeout?:number,
     encryptData:UnimatrixEncryptFn,
@@ -277,7 +266,7 @@ export const getData=async (args:{
                         stop();
                         return reject(validationError);  
                     }
-                    if(args?.throwIncommingErrors && store?.file?.error){
+                    if(args?.throwUserErrors && store?.file?.error){
                         stop();
                         return reject(store?.file?.error);
                     }
@@ -321,15 +310,12 @@ const gunPut = (node:IGunChain<string>,val:any):Promise<true|string> => {
 })};
 
 export const setData=async (args:{
-    //CSL:any,
     db:UnimatrixDB,    
     id:string,
     validator:UnimatrixValidatorTag,
     validators:UnimatrixValidatorMap,
     path:string[],       
     store:UnimatrixDataStore,     
-    // file:UnimatrixData,
-    // updatedAt?:number,
     checkByFetching?:boolean,
     encryptData:UnimatrixEncryptFn,
     decryptData: UnimatrixDecryptFn,
@@ -339,8 +325,6 @@ export const setData=async (args:{
             
             if(!args.db)
                 throw new Error("Missing GunDb connection");            
-            // if(!args.CSL)
-            //     throw new Error("Missing CSL");
             if(!args.validators)
                 throw new Error("Missing validator definitions");
             if(!args.validator)
