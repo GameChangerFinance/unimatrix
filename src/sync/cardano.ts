@@ -25,7 +25,13 @@ export const NONCE_SIZE         = 12
 export type CardanoSerializationLib = any;
 
 export function randomBytes(size:number) {
-	return Buffer.from(crypto.getRandomValues(new Uint8Array(size)))
+    if(typeof crypto?.getRandomValues !=='function'){
+        if(typeof window?.crypto?.getRandomValues ==='function')
+            return Buffer.from(window.crypto.getRandomValues(new Uint8Array(size)))
+        if(typeof global?.crypto?.getRandomValues ==='function')
+            return Buffer.from(global.crypto.getRandomValues(new Uint8Array(size)))
+    }
+    return Buffer.from(crypto.getRandomValues(new Uint8Array(size)))
 }
 
 export const genUnimatrixIdFromTxHashes=(txHashes:string[])=>{
