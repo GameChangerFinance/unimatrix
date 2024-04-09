@@ -1,0 +1,113 @@
+{
+  "type": "script",
+  "title": "Buy 1 Nanite?",
+  "description": "Decentralized Token Sale. Buy 1 Nanite for 2000000 lovelaces. Transaction will be reviewed by decentralized Unimatrix validator nodes.",
+  "exportAs": "TokenSale",
+  "return": {
+    "mode": "last"
+  },
+  "run": {
+    "dependencies": {
+      "type": "script",
+      "run": {
+        "mintingPolicy": {
+          "type": "nativeScript",
+          "script": {
+            "all": {
+              "issuer": {
+                "pubKeyHashHex": "ded983764fdb27ff993ce0257e64e20cba99348ad3721a59e8c62819"
+              }
+            }
+          }
+        }
+      }
+    },
+    "build": {
+      "type": "buildTx",
+      "title": "Decentralized Token Sale",
+      "returnURLPattern": "https://unimatrix-demo.netlify.app/?txHash={txHash}",
+      "tx": {
+        "mints": [
+          {
+            "policyId": "{get('cache.dependencies.mintingPolicy.scriptHashHex')}",
+            "assets": [
+              {
+                "assetName": "nanite",
+                "quantity": "1"
+              }
+            ]
+          }
+        ],
+        "outputs": {
+          "serviceFee": {
+            "address": "addr_test1qrl07u9ssdtdwtzhrt0zrrr79yejxhfvmsmjt9jxqyaz0ktp6ydulqht6r9z4ld0jms3a3c7gw45u32vhc2ftdp2f6rqvz02jw",
+            "assets": [
+              {
+                "policyId": "ada",
+                "assetName": "ada",
+                "quantity": "2000000"
+              }
+            ]
+          }
+        },
+        "requiredSigners": {
+          "spend": "ded983764fdb27ff993ce0257e64e20cba99348ad3721a59e8c62819"
+        },
+        "witnesses": {
+          "nativeScripts": {
+            "mintingScript": "{get('cache.dependencies.mintingPolicy.scriptHex')}"
+          }
+        },
+        "auxiliaryData": {
+          "674": {
+            "msg": "{strToMetadataStr(hexToStr('0a0a436f6e736964657220766f74696e672046756e643131206f70656e20736f757263652070726f6a656374733a0a0a2d2047616d654368616e6765723a206f70656e2d736f757263696e67206e6f7720746f2068656c70204349503330207370656320757067726164650a68747470733a2f2f63617264616e6f2e696465617363616c652e636f6d2f632f696465612f3131323436380a0a2d2047616d654368616e6765723a206f70656e2d736f757263696e6720556e696d617472697820746f2064656d6f63726174697a65206d756c74697369670a68747470733a2f2f63617264616e6f2e696465617363616c652e636f6d2f632f696465612f3131323437302f0a0a2d20416e64616d696f202d2047616d656368616e6765722048656c696f73206441505020616e64206170706c69636174696f6e206261636b656e6420636f757273650a68747470733a2f2f63617264616e6f2e696465617363616c652e636f6d2f632f696465612f3131323231350a0a2d2043617264616e6f20546f74656d2056323a204f6e626f617264696e672074686520776f726c640a68747470733a2f2f63617264616e6f2e696465617363616c652e636f6d2f632f696465612f3131323037310a0a2d2044616e64656c696f6e20506f737467524553542047554920666f7220646576656c6f7065727320616e642073747564656e74730a68747470733a2f2f63617264616e6f2e696465617363616c652e636f6d2f632f696465612f3131323437330a0a486170707920486f6c6964617973210a0a'))}"
+          }
+        }
+      }
+    },
+    "sign": {
+      "detailedPermissions": false,
+      "type": "signTxs",
+      "multisig": [
+        {
+          "kind": "MainAddress"
+        },
+        {
+          "kind": "CurrentWorkspace"
+        },
+        {
+          "id": "multisig_1234",
+          "kind": "Unimatrix",
+          "share": true,
+          "shareTxs": true,
+          "announceTxHashes": true,
+          "announceTxHashesSubPath": "signTxs"
+        }
+      ],
+      "txs": [
+        "{get('cache.build.txHex')}"
+      ]
+    },
+    "submit": {
+      "type": "submitTxs",
+      "txs": "{get('cache.sign')}"
+    },
+    "finally": {
+      "type": "script",
+      "run": {
+        "txHash": {
+          "type": "macro",
+          "run": "{get('cache.build.txHash')}"
+        },
+        "policyId": {
+          "type": "macro",
+          "run": "{get('cache.dependencies.mintingPolicy.scriptHashHex')}"
+        },
+        "mintingScript": {
+          "type": "macro",
+          "run": "{get('cache.dependencies.mintingPolicy.scriptHex')}"
+        }
+      }
+    }
+  }
+}
