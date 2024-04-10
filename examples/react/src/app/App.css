@@ -1,0 +1,286 @@
+html{
+    /* background: linear-gradient(135deg, #111113, #172719); */
+    background-color: #111113;
+}
+/* Body */
+body {
+    color: #cbfad7;
+    background-color: inherit;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.centered{
+    text-align: center;
+}
+/* Navbar */
+.navbar {
+    background-color: #000 !important;
+}
+
+.navbar-brand {
+    color: #fff;
+}
+
+.navbar-nav .nav-link {
+    color: #fff !important;
+}
+
+/* Links */
+a {
+    color: #9a9a9a;
+}
+
+a:hover {
+    color: #fff;
+}
+
+/* Buttons */
+.btn {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+.btn:hover{
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+.btn-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border-color: #007bff;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #0056b3, #003c80);
+    border-color: #0056b3;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    border-color: #6c757d;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(135deg, #495057, #343a40);
+    border-color: #495057;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #218838);
+    border-color: #28a745;
+    color: #fff;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #218838, #1e7e34);
+    border-color: #218838;
+}
+
+.btn-info {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    border-color: #17a2b8;
+    color: #fff;
+}
+
+.btn-info:hover {
+    background: linear-gradient(135deg, #138496, #10707f);
+    border-color: #138496;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107, #d39e00);
+    border-color: #ffc107;
+    color: #fff;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #d39e00, #b27a00);
+    border-color: #d39e00;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545, #bd2130);
+    border-color: #dc3545;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #bd2130, #a1191e);
+    border-color: #bd2130;
+}
+
+.btn-light {
+    background: linear-gradient(135deg, #f8f9fa, #e2e6ea);
+    border-color: #f8f9fa;
+    color: #000;
+}
+
+.btn-light:hover {
+    background: linear-gradient(135deg, #e2e6ea, #d4d8db);
+    border-color: #e2e6ea;
+}
+
+.btn-dark {
+    background: linear-gradient(135deg, #343a40, #23272b);
+    border-color: #343a40;
+    color: #fff;
+}
+
+.btn-dark:hover {
+    background: linear-gradient(135deg, #23272b, #16181a);
+    border-color: #23272b;
+}
+
+/* Glow Effect */
+.btn,
+.form-control,
+input,
+textarea,
+pre {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    background-color: #050706;
+    outline: none;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: var(--bs-border-radius) !important;
+}
+
+.btn:hover,
+.form-control:hover,
+input:hover,
+textarea:hover,
+pre:hover{
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+
+.form-control,
+input,
+textarea,
+pre {
+    color: #6fdb8a;
+}
+
+/* Glow Effect */
+.neon,h1 {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    transition: text-shadow 0.3s ease-in-out;
+}
+
+.neon:hover, h1:hover {
+    text-shadow: 0 0 20px rgba(120, 201, 100, 0.856);
+    color: #fff; /* subtle purple tint */
+}
+
+.text-muted {
+    color: #6c8171!important;
+}
+
+
+
+/* Custom Scrollbar CSS */
+
+/* Scrollbar for all components and browser window */
+::-webkit-scrollbar {
+    width: 10px;
+    background-color: #1c1e26; /* dark gray */
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #2a2d35; /* darker gray */
+    border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #34383f; /* even darker gray */
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #1c1e26; /* dark gray */
+}
+
+/* Track on hover */
+::-webkit-scrollbar-track:hover {
+    background: #1c1e26; /* dark gray */
+}
+
+
+
+
+
+
+/* Neon Glow Effect */
+.shiny, .btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.shiny::before, .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300%;
+    height: 300%;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    z-index: 1;
+    transition: all 0.6s ease;
+    pointer-events: none;
+}
+
+.shiny:hover::before, .btn:hover::before {
+    transform: translate(-50%, -50%);
+}
+
+.shiny::after, .btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300%;
+    height: 300%;
+    background-color: #69f0ae;
+    border-radius: 50%;
+    z-index: 0;
+    transition: all 0.6s ease;
+    pointer-events: none;
+}
+
+.shiny:hover::after, .btn:hover::after {
+    transform: translate(-50%, -50%);
+    opacity: 0;
+}
+
+
+  
+.a-unstyled, .a-unstyled > * {
+    color: inherit;
+    text-decoration: none; 
+}
+
+.a-unstyled:link, .a-unstyled > *:link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.a-unstyled:visited, .a-unstyled > *:visited {
+    color: inherit;
+    text-decoration: none;
+}
+
+.a-unstyled:hover, .a-unstyled > *:hover {
+    color: inherit;
+    text-decoration: none;
+}
+
+.a-unstyled:active, .a-unstyled > *:active {
+    color: inherit;
+    text-decoration: none;
+}

@@ -1,0 +1,38 @@
+{
+  "name": "react",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "link-unimatrix": "npm link @gamechanger-finance/unimatrix"
+  },
+  "dependencies": {
+    "@emurgo/cardano-serialization-lib-browser": "^11.5.0",
+    "@gamechanger-finance/gc": "^0.1.0",
+    "@gamechanger-finance/unimatrix": "file:../..",
+    "@mdi/font": "^7.4.47",
+    "bip39": "^3.1.0",
+    "cross-fetch": "^4.0.0",
+    "moment": "^2.30.1",
+    "react": "^18.2.0",
+    "react-copy-to-clipboard": "^5.1.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.66",
+    "@types/react-dom": "^18.2.22",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.6",
+    "vite": "^5.2.0",
+    "vite-plugin-node-polyfills": "0.17.0",
+    "vite-plugin-top-level-await": "^1.4.1",
+    "vite-plugin-wasm": "^3.3.0"
+  }
+}
