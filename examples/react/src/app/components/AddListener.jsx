@@ -1,7 +1,7 @@
 import { TapToChange, useInput } from "./common/common";
 import Gun from 'gun';
 import { generateMnemonic,getWalletData } from "../services/wallet";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * React component that registers on application state a new "listener":
@@ -29,6 +29,11 @@ export const AddListener=({
     const [newAddress,  setNewAddress, setNewAddressInput]  = 
     useInput({ title:"Signer Bot and examples fee address",name:"newAddress",type: "text",defaultValue:config?.unimatrix?.autoSigner[newNetwork]?.address, className:"w-100"});
 
+    useEffect(()=>{
+        setNewAddress(config?.unimatrix?.autoSigner[newNetwork]?.address);
+        setNewFee(config?.unimatrix?.autoSigner[newNetwork]?.fee);
+    },[newNetwork]);
+    
     const walletData=getWalletData(mnemonic,newNetwork);
     const handleGenerateSeed=(e)=>{
         e && e.preventDefault();
