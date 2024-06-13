@@ -1,12 +1,20 @@
 /**
- * Unimatrix Sync library for Cardano
- * 
  * A set of helpers to standardize a basic data exchange protocol 
- * to share Cardano transactions and signatures using Unimatrix
+ * to share **Cardano** transactions and signatures using **Unimatrix**
+ * @module unimatrix-sync-cardano
  * 
- * Main use case are multi-signature or deferred-signature scenarios
- * involving wallets, dapps and services
+ * @remarks
  * 
+ * A module for **Cardano** built on top of the **Unimatrix** library, with custom validators, encryption functions and data types fully compatible with [cardano-serialization-lib](https://github.com/Emurgo/cardano-serialization-lib).
+ * 
+ * Main use case are multi-signature or deferred-signature scenarios involving wallets, dapps and services on the **Cardano Blockchain**
+ * 
+ * **Validators and their matching data types**:
+ *  - **Items**
+ *      - `cardano.vkWitnessHex` : transaction key witness (signature) in hexadecimal encoding
+ *      - `cardano.txHex`: transaction CBOR structure in hexadecimal encoding
+ *  - **Announcements**
+ *      - `cardano.TxHashHexList` : list of transaction hash strings
  */
 
 import {genDataKey,getData,GET_TIMEOUT_MS,onData,setData, UnimatrixDataStore, UnimatrixDecryptFn, UnimatrixEncryptFn, UnimatrixUserError, UnimatrixValidatorFn,UnimatrixValidatorFnArgs, UnimatrixValidatorMap} from  '../unimatrix';
@@ -14,14 +22,33 @@ import { JSONStringify, logger,UnimatrixDB, UnimatrixDBDataNode } from '../commo
 import sha512 from 'crypto-js/sha512';
 import crypto from 'crypto';
 
+/**
+ * Name of Cardano or Cardano-based chain
+ */
 export type DLTTag              = "cardano" | "forkano" | "guild" | "shareslake"
+/**
+ * Name of Cardano or Cardano-based chain network
+ */
 export type NetworkTag          = "mainnet" | "preprod" | "preview" | "legacy"
-export type CardanoValidatorTag = 'sha512' | 'cardano.TxHashHexList' | 'cardano.vkWitnessHex' | 'cardano.txHex';
+/**
+ * Validator tags for **Cardano** and it's data types
+ * 
+ */
+export type CardanoValidatorTag = 'cardano.TxHashHexList' | 'cardano.vkWitnessHex' | 'cardano.txHex';
 
 //export const defaultTimeoutMs   =1000*5;//5 seconds
+/**
+ * Salt size for `encryptDataFactory`
+ */
 export const SALT_SIZE          = 32
+/**
+ * Nonce size for `encryptDataFactory`
+ */
 export const NONCE_SIZE         = 12
 
+/**
+ * External library type: [cardano-serialization-lib](https://github.com/Emurgo/cardano-serialization-lib)
+ */
 export type CardanoSerializationLib = any;
 
 export function randomBytes(size:number) {
@@ -34,6 +61,16 @@ export function randomBytes(size:number) {
     return Buffer.from(crypto.getRandomValues(new Uint8Array(size)))
 }
 
+/**
+ * Helper function that generates a hash string out of a list of transaction hash strings. 
+ * 
+ * Some clients like **GameChanger Wallet** uses it for establishing private channels.
+ * The generated strings are used as private unique channel IDs based on built transactions 
+ * that are not yet signed nor submitted to the blockchain, meaning that these IDs are only known by 
+ * this transaction builder user and whomever this user shares them with.
+ * 
+ * @param txHashes 
+ */
 export const genUnimatrixIdFromTxHashes=(txHashes:string[])=>{
     const data=txHashes
     .filter(x=>!!(x||"").trim())
@@ -41,7 +78,10 @@ export const genUnimatrixIdFromTxHashes=(txHashes:string[])=>{
     .join('-');
     return sha512(data).toString();
 }
-
+/**
+ * Function that generates an `UnimatrixEncryptFn` using **cardano-serialization-lib**'s `encrypt_with_password()` underneath
+ * @param CSL 
+ */
 export const encryptDataFactory=(CSL:any):UnimatrixEncryptFn=>(args)=>{
     try{
         if(!CSL)
@@ -71,6 +111,10 @@ export const encryptDataFactory=(CSL:any):UnimatrixEncryptFn=>(args)=>{
         throw new Error(`Unimatrix encryption error: ${err}`);
     }    
 }
+/**
+ * Function that generates an `UnimatrixDecryptFn` using **cardano-serialization-lib**'s `decrypt_with_password()` underneath
+ * @param CSL 
+ */
 export const decryptDataFactory=(CSL:any):UnimatrixDecryptFn=>(args)=>{
     try{
         if(!CSL)
@@ -148,7 +192,11 @@ export const verifyVkWitnessHex=(args:{
     return "invalid data provided";
 }
 
-
+/**
+ * Function that generates the map of validators for **Cardano** (`UnimatrixValidatorMap`), using **cardano-serialization-lib**'s classes underneath.
+ * 
+ * @param CSL 
+ */
 export const cardanoValidatorsFactory=(CSL:any):UnimatrixValidatorMap=>({
     'cardano.TxHashHexList':(args:UnimatrixValidatorFnArgs)=>{  
         if(args?.store.file?.error && typeof args?.store.file?.error!=="string")
@@ -203,11 +251,15 @@ export const cardanoValidatorsFactory=(CSL:any):UnimatrixValidatorMap=>({
     },
 })
 
-
-
-
+/////////////////////////////////////////////
 ////////////  vkWitnessHex ////////////////
+/////////////////////////////////////////////
 
+/**
+ * Helper that generates the key for the GunDB key-value structure used for storing a transaction key witness 
+ * 
+ * @param args 
+ */
 export const genVkWitnessHexKey=(args:{
     id:string,
     dltTag:DLTTag,
@@ -220,6 +272,11 @@ export const genVkWitnessHexKey=(args:{
     path:[args.dltTag,args.networkTag,args.txHash,args.vkHash],
 });
 
+/**
+ * Listener promise that calls the `cb` callback every time it receives a specific incoming transaction key witness (in hexadecimal encoding) on a specific channel
+ * 
+ * @param args 
+ */
 export const onVkWitnessHex=async (args:{
     CSL:CardanoSerializationLib,
     db:UnimatrixDB,
@@ -258,6 +315,11 @@ export const onVkWitnessHex=async (args:{
     },
 });
 
+/**
+ * Getter promise that returns a specific transaction key witness (in hexadecimal encoding) on a specific channel
+ * 
+ * @param args 
+ */
 export const getVkWitnessHex=async (args:{
     CSL:CardanoSerializationLib,
     db:UnimatrixDB,
@@ -292,6 +354,12 @@ export const getVkWitnessHex=async (args:{
     };
 });
 
+
+/**
+ * Setter promise that shares a specific transaction key witness (in hexadecimal encoding) on a specific channel
+ * 
+ * @param args 
+ */
 export const setVkWitnessHex=async (args:{
     CSL:CardanoSerializationLib,
     db:UnimatrixDB,
@@ -342,7 +410,11 @@ export const setVkWitnessHex=async (args:{
 
 ////////////  txHex ////////////////
 
-
+/**
+ * Helper that generates the key for the GunDB key-value structure used for storing a transaction CBOR structure
+ * 
+ * @param args 
+ */
 export const genTxHexKey=(args:{
     id:string,
     dltTag:DLTTag,
@@ -354,7 +426,11 @@ export const genTxHexKey=(args:{
     path:[args.dltTag,args.networkTag,args.txHash],
 });
 
-
+ /**
+ * Listener promise that calls the `cb` callback every time it receives a specific incoming transaction CBOR structure (in hexadecimal encoding) on a specific channel
+ * 
+ * @param args 
+ */
 export const onTxHex=async (args:{
     CSL:CardanoSerializationLib,
     db:UnimatrixDB,
@@ -392,7 +468,11 @@ export const onTxHex=async (args:{
     },
 });
 
-
+ /**
+ * Getter promise that returns a specific transaction CBOR structure (in hexadecimal encoding) on a specific channel
+ * 
+ * @param args 
+ */
 export const getTxHex=async (args:{
     CSL:CardanoSerializationLib,
     db:UnimatrixDB,
@@ -425,7 +505,11 @@ export const getTxHex=async (args:{
         txHex,
     };
 });
-
+ /**
+ * Setter promise that shares a specific transaction CBOR structure (in hexadecimal encoding) on a specific channel
+ * 
+ * @param args 
+ */
 export const setTxHex=async (args:{
     CSL:CardanoSerializationLib,
     db:UnimatrixDB,
@@ -473,7 +557,11 @@ export const setTxHex=async (args:{
 
 
 ////////////  TxHashHexList ////////////////
-
+/**
+ * Helper that generates the key for the GunDB key-value structure used for storing a list of transaction hashes
+ * 
+ * @param args 
+ */
 export const genTxHashesKey=(args:{
     id:string,//getUnimatrixIdFromTxHashes(txHashList)
     dltTag:DLTTag,
@@ -486,7 +574,11 @@ export const genTxHashesKey=(args:{
 });
 
 
-
+ /**
+ * Listener promise that calls the `cb` callback every time it receives any incoming announced list of transaction hashes on a specific channel
+ * 
+ * @param args 
+ */
 export const onTxHashes=async (args:{
     CSL:CardanoSerializationLib,
     db:UnimatrixDB,
@@ -525,7 +617,11 @@ export const onTxHashes=async (args:{
     },
 });
 
-
+ /**
+ * Getter promise that returns any announced list of transaction hashes on a specific channel
+ * 
+ * @param args 
+ */
 export const getTxHashes=async (args:{
     CSL:CardanoSerializationLib,
     db:UnimatrixDB,
@@ -562,6 +658,11 @@ export const getTxHashes=async (args:{
     };
 });
 
+ /**
+ * Setter promise that shares the announcement of a list of transaction hashes on a specific channel
+ * 
+ * @param args 
+ */
 export const setTxHashes=async (args:{
     CSL:CardanoSerializationLib,
     db:UnimatrixDB,
