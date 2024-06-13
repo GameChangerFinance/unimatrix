@@ -44,7 +44,7 @@ const options={
 export const gcPaymentsTxs=(args:{networkTag:string,unimatrixId:string,path:string[],peers:string[],feeCoin:string,feeAddress:string,spendKeyHash:string,stakeKeyHash:string,options?:any})=>{    
     const gcScript:any={
         "title": "Three transactions at once",
-        "description": "Builds, sign and submit 3 multisig transactions requiring external signing keys, signatures that will be provided in real time by decentralized Unimatrix validator nodes",
+        "description": "Builds, sign and submit 3 multisig transactions requiring external signing keys, signatures that will be provided in real time by decentralized Unimatrix validator nodes. Requires 3+ UTXOs for concurrency.",
         "exportAs": "multisig",
         "return": {
             "mode": "last"

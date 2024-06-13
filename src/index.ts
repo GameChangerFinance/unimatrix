@@ -1,3 +1,9 @@
+/**
+ * Unified entrypoint for projects to import **Unimatrix Sync for Cardano** plus basic **Unimatrix** functions
+ * @module index
+ * 
+ */
+
 import {
     genDataKey,
     onData,
@@ -8,12 +14,13 @@ import {
 import * as cardano from './sync';
 
 export {
-    //unimatrix
+    // basic unimatrix functions
     genDataKey,
     onData,
     getData,
     setData,
-
-    //unimatrix-sync
+    /**
+     * unimatrix-sync-cardano
+     */
     cardano,
 }
