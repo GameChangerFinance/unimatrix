@@ -14,7 +14,10 @@ const getConfig=async()=>{
     }
     const defaultMnemonic="lucky wild glass legal twenty hurry october mountain spatial rain uncle abandon width lady pink";
     const mnemonic=process.env.MNEMONIC || defaultMnemonic;
-    const defaultPeers="https://unimatrix01.gamechanger.finance/gun,http://localhost:8765/gun";
+    const defaultPeers={
+        "preprod":"https://ar01.gamechanger.finance:2083/unimatrix/gun,https://ar02.gamechanger.finance:2083/unimatrix/gun,https://unimatrix01.gamechanger.finance/gun,http://localhost:8765/gun",
+        "mainnet":"https://ar01.gamechanger.finance:2053/unimatrix/gun,https://ar02.gamechanger.finance:2053/unimatrix/gun,https://unimatrix01.gamechanger.finance/gun,http://localhost:8765/gun"
+    };
     
     const wallet=getWalletData({mnemonic,networkTag,dltTag});
     const useSpend=toBoolean(process.env.SPEND || "true");
@@ -34,7 +37,7 @@ const getConfig=async()=>{
         //wallet,
         unimatrixId:process.env.UNIMATRIX_ID||"multisig_1234",
         unimatrixTxSubPath:toArray(process.env.UNIMATRIX_TX_PATH||"signTxs",'/'),
-        unimatrixPeers:toArray(process.env.UNIMATRIX_PEERS||defaultPeers,','),
+        unimatrixPeers:toArray(process.env.UNIMATRIX_PEERS||defaultPeers[networkTag],','),
         logLevels,
     });
 }
