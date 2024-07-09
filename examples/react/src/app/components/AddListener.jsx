@@ -42,19 +42,26 @@ export const AddListener=({
     const handleAddListener=(e)=>{
 
         setConfig(oldConfig=>{        
-            const peers=oldConfig?.unimatrix?.relays||[];              
             if(!newId || !newPath){
                 alert("Missing channel parameters!")
-                return oldConfig;
-            }
-            if(!peers || peers?.length<1){
-                alert("Missing relay peers!")
                 return oldConfig;
             }
             const _key=`${newNetwork||""}:${newId||""}:${newPath||""}:${walletData?.address||""}`;
             if(oldConfig.db.unimatrixListeners.find((listener)=>listener?._key===_key) ){
                 alert("Listener already loaded!");
                 return oldConfig;  
+            }
+            const peers=oldConfig?.unimatrix?.relays[newNetwork]||[];
+            //for hosting with gunDb examples or dandelion-lite:  
+            if(oldConfig?.unimatrix?.selfHostedRelayPaths){
+                for(const relayPath of oldConfig?.unimatrix?.selfHostedRelayPaths){
+                    if(relayPath)
+                        peers.push(`${location?.origin||""}${relayPath}`);
+                }    
+            }
+            if(!peers || peers?.length<1){
+                alert("Missing relay peers!")
+                return oldConfig;
             }
             const newConfig={...oldConfig};
             const _newPath=newPath.split('/')

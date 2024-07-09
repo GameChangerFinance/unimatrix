@@ -2,8 +2,22 @@
     "dltTag":"cardano",
     "networkTag":"preprod",
     "networkTags":["mainnet","preprod"],
-    "unimatrix":{      
-      "relays":["https://unimatrix01.gamechanger.finance/gun"],
+    "unimatrix":{  
+      "selfHostedRelayPaths" :["/unimatrix/gun","/gun"],   
+      "relays":{
+        "preprod":[
+          "https://ar01.gamechanger.finance:2083/unimatrix/gun",
+          "https://ar02.gamechanger.finance:2083/unimatrix/gun",
+          "https://unimatrix01.gamechanger.finance/gun",
+          "https://unimatrix02.gamechanger.finance/gun"
+        ],
+        "mainnet":[
+          "https://ar01.gamechanger.finance:2053/unimatrix/gun",
+          "https://ar02.gamechanger.finance:2053/unimatrix/gun",
+          "https://unimatrix01.gamechanger.finance/gun",
+          "https://unimatrix02.gamechanger.finance/gun"
+        ]
+      },
       "autoSigner":{        
           "mainnet":{
             "address":"addr1q9faamq9k6557gve35amtdqph99h9q2txhz07chaxg6uwwgd6j6v0fc04n5ehg292yxvs292vesrqqmxqfnp7yuwn7yqczuqwr",

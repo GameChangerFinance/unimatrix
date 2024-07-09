@@ -8,5 +8,8 @@ export const loadConfig=async(url)=>{
                 throw new Error("Bad response from server");
             }
             return res.json();
-        });
+        })
+        .catch(err=>{
+            alert(`Unable to load '${url}'. ${err?.message||"Unknown error."}`)
+        })
 }
