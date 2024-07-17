@@ -5,12 +5,6 @@
 >**Unimatrix** is a real-time protocol where clients reads and writes encrypted data over [GunDB](https://gun.eco/), a decentralized key-value store used as a shared cache storage. It creates channels using obfuscated (hashed) keys and encrypted data values, only allowing the bearers of certain channel parameters and right data to locate and decrypt the information.
 Originally created for **GameChanger Wallet** and targeted but not limited to the **Cardano Blockchain**, it aims to improve multi-signature user experience on #RealFi scenarios and boost multisig dapps and services.
 
-## IMPORTANT
-
-This repository is under final development and a review process, official npm package publishing and wallet-side updates after some minor breaking changes are yet pending.
-
-Coming soon!
-
 ## Table of Contents
 
 - [Installation](#installation)
@@ -34,6 +28,7 @@ Coming soon!
     - [Try it locally](#try-it-locally)
     - [Generate docs](#generate-docs)
 - [Contributing](#contributing)
+- [TODO](#todo)
 - [License](#license)
 
 ## Installation
@@ -381,7 +376,13 @@ Contributions are welcome! Please fork the repository and submit a pull request.
 7. Open a pull request
 
 
+## TODO
+
+- A minor breaking change regarding public metadata with it's co-related wallet-side update is pending.
+
 ## License
 
-This project is about to be licensed under the MIT License. See the LICENSE file for details.
+This closed-source project has been improved and released as open source after ₳91.1M positive votes from the Cardano community on Fund 11 of Project Catalyst. Thanks voters and Catalyst for making this possible and help builders to keep working on open source tooling for the great Cardano ecosystem.
+
+See the LICENSE file for details.
 
