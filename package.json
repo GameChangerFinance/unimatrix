@@ -1,6 +1,6 @@
 {
   "name": "@gamechanger-finance/unimatrix",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Unimatrix Sync is a decentralized, privacy preserving, transaction witness sharing and pairing solution for multisignatures or deferred signatures. It was originally created for GameChanger Wallet to improve it's multisignature user experience and boost the multisig dapp and service ecosystem",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
