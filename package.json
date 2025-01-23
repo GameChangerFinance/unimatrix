@@ -65,7 +65,7 @@
   "devDependencies": {
     "@commitlint/cli": "^13.1.0",
     "@commitlint/config-conventional": "^13.1.0",
-    "@emurgo/cardano-serialization-lib-nodejs": "^11.5.0",
+    "@emurgo/cardano-serialization-lib-nodejs": "^13.2.1",
     "@jest/globals": "^29.7.0",
     "@types/crypto-js": "^4.2.2",
     "@types/jest": "^27.5.2",
