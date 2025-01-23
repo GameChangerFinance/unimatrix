@@ -228,7 +228,7 @@ export const cardanoValidatorsFactory=(CSL:any):UnimatrixValidatorMap=>({
         try{
             const txHex:string=args?.store.file?.data||"";        
             const [dltTag,networkTag,txHash] = args.path||[];
-            const txObj 	    = CSL.Transaction.from_hex(txHex) //.from_bytes(fromHex(txHex))           
+            const txObj 	    = CSL.FixedTransaction.from_hex(txHex) //.from_bytes(fromHex(txHex))           
             const txBodyObj	    = txObj.body() //args.CSL.TransactionBody.from_bytes(fromHex(txHex))
             const networkId     = txBodyObj.network_id()?.kind();
             if(networkId!==undefined){
@@ -241,7 +241,7 @@ export const cardanoValidatorsFactory=(CSL:any):UnimatrixValidatorMap=>({
                 if(realNetworkTag!==networkTag)
                     return `This is a '${realNetworkTag||"unknown network"}' transaction. Wrong network`
             }
-            const txHashObj  	= CSL.hash_transaction(txBodyObj);
+            const txHashObj  	= txObj.transaction_hash()//CSL.hash_transaction(txBodyObj);
             const realTxHash    = txHashObj.to_hex();
             if(realTxHash!==txHash)
                 return "Transaction hash mismatch"                        

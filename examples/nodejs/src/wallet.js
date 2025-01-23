@@ -66,8 +66,8 @@ const getWalletData = ({ mnemonic, networkTag, dltTag }) => {
         .to_raw_key()
     const baseAddressObj = CSL.BaseAddress.new(
         networkIdByTag(networkTag),//parseInt(networkId),
-        CSL.StakeCredential.from_keyhash(pubSpendKey.hash()),
-        CSL.StakeCredential.from_keyhash(pubStakeKey.hash())
+        CSL.Credential.from_keyhash(pubSpendKey.hash()),
+        CSL.Credential.from_keyhash(pubStakeKey.hash())
     );
     return {
         address: baseAddressObj.to_address().to_bech32(),
@@ -99,8 +99,8 @@ const signTxIfValid = async ({
     networkTag,
     validator,
 }) => {
-    const txObj = CSL.Transaction.from_hex(txHex);
-    const txHashObj = CSL.hash_transaction(txObj.body());
+    const txObj = CSL.FixedTransaction.from_hex(txHex);
+    const txHashObj = txObj.transaction_hash();
     const _txHash = txHashObj.to_hex();
     if (txHash !== _txHash)
         throw new Error(`Transaction hash mismatch`);
@@ -109,7 +109,7 @@ const signTxIfValid = async ({
     if (vkHash !== _vkHash) {
         throw new Error(`Key hash mismatch`);
     }
-    const txJson = JSON.parse(txObj.to_json());
+    const txJson=JSON.parse(CSL.Transaction.from_hex(txHex).to_json());    
     const validation = await validator({
         txJson,
         txHex,

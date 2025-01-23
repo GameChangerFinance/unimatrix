@@ -1,6 +1,6 @@
 {
   "name": "signer-bot",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A NodeJs Cardano transaction validator and signer bot using Unimatrix Sync. Works with transactions from p2p multisigs, dapps, other bots, or a mix of all. ",
   "main": "src/index.js",
   "scripts": {
@@ -28,7 +28,7 @@
   "author": "zxpectre",
   "license": "ISC",
   "dependencies": {
-    "@emurgo/cardano-serialization-lib-nodejs": "^11.5.0",
+    "@emurgo/cardano-serialization-lib-nodejs": "^13.2.1",
     "@gamechanger-finance/unimatrix": "file:../..",
     "bip39": "^3.1.0",
     "dotenv": "^16.4.5",
