@@ -1,7 +1,7 @@
 {
-  "name": "react",
+  "name": "react-signer-bot",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,7 +11,7 @@
     "link-unimatrix": "npm link @gamechanger-finance/unimatrix"
   },
   "dependencies": {
-    "@emurgo/cardano-serialization-lib-browser": "^11.5.0",
+    "@emurgo/cardano-serialization-lib-browser": "^13.2.1",
     "@gamechanger-finance/gc": "^0.1.0",
     "@gamechanger-finance/unimatrix": "file:../..",
     "@mdi/font": "^7.4.47",

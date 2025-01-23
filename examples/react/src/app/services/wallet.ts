@@ -77,8 +77,8 @@ export const getWalletData=(mnemonic:string,networkTag:string)=>{
             .to_raw_key()
         const baseAddressObj= CardanoWasm().BaseAddress.new(
             networkIdByTag(networkTag),//parseInt(networkId),
-            CardanoWasm().StakeCredential.from_keyhash(pubSpendKey.hash()),
-            CardanoWasm().StakeCredential.from_keyhash(pubStakeKey.hash())
+            CardanoWasm().Credential.from_keyhash(pubSpendKey.hash()),
+            CardanoWasm().Credential.from_keyhash(pubStakeKey.hash())
         );
         return {
             address:baseAddressObj.to_address().to_bech32(),
@@ -129,13 +129,18 @@ export const signTxIf=async(args:{
 }|undefined>=>{
     try{
         const CSL=CardanoWasm();
-        const txObj=CSL.Transaction.from_hex(args.txHex);
-        const txHashObj=CSL.hash_transaction(txObj.body());
+        const txObj=CSL.FixedTransaction.from_hex(args.txHex);
+        const txHashObj=txObj.transaction_hash();
         const txHash=txHashObj.to_hex();
-        const txJson=JSON.parse(txObj.to_json());
+        const txJson=JSON.parse(CSL.Transaction.from_hex(args.txHex).to_json());
         const {doSign:signWithSpend,error:spendError}=await args.conditions.spend({txJson,txHash,vkHash:args?.wallet?.pubSpendKeyHash});
         const {doSign:signWithStake,error:stakeError}=await args.conditions.stake({txJson,txHash,vkHash:args?.wallet?.pubStakeKeyHash});
-        const res={
+        const res:{
+            spend:string|undefined,
+            stake:string|undefined,
+            spendError:string|undefined,
+            stakeError:string|undefined,            
+        }={
             spend:undefined,
             stake:undefined,
             spendError,
