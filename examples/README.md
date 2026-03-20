@@ -4,7 +4,7 @@
 
 Check these examples to learn how to create **Unimatrix Sync** instances on frontend and backend to build multi-signature dapps and services.
 
-- [React Example](react/): 4 use cases in 1 dapp ([Live Demo](https://unimatrix-node.netlify.app/))
+- [React Example](react/): 4 use cases in 1 dapp ([Live Demo](https://unimatrix-live-demo.netlify.app/))
 - [NodeJS Example](nodejs/): signing bot service
 
 ### React Dapp:
@@ -20,7 +20,7 @@ The [React Example](react/) is a complete client side dapp (more specifically, a
 
 #### Signer Bot Mode Instructions:
 
-1. create or import a Cardano wallet on [GameChanger Wallet for Mainnet](https://beta-wallet.gamechanger.finance/) or [GameChanger Wallet for Pre-Production Testnet](https://beta-preprod-wallet.gamechanger.finance/)
+1. create or import a Cardano wallet on [GameChanger Wallet for Mainnet](https://wallet.gamechanger.finance/?networkTag=mainnet) or [GameChanger Wallet for Pre-Production Testnet](https://wallet.gamechanger.finance/?networkTag=preprod)
 2. get enough balance and UTXOs:
     - On **empty Pre-Production Testnet wallets** a free airdrop button will appear after some seconds. Click on it and follow the steps. With this method you will get enough balance and UTXOs to get started, no other step needed.
     - Otherwise ensure you have enough balance and UTXOs on your wallet. You can make any transaction like sending 1 ADA to yourself on **Smart Send** to let the wallet generate several change outputs producing enough UTXOs to try the examples

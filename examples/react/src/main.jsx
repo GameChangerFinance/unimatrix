@@ -4,7 +4,7 @@ import App from './app/App'
 import { loadModule } from './app/services/cardanoWasm';
 import { loadConfig } from './app/services/config';
 
-const configUrl='config.json';
+const configUrl='cfg.json';
 
 const AppLoader=()=>{
   const [cslReady,setCSLReady]=useState(null);

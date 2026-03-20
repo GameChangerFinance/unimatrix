@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@emurgo/cardano-serialization-lib-browser": "^13.2.1",
-    "@gamechanger-finance/gc": "^0.1.0",
+    "@gamechanger-finance/gc": "^1.0.0",
     "@gamechanger-finance/unimatrix": "file:../..",
     "@mdi/font": "^7.4.47",
     "bip39": "^3.1.0",
