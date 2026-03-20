@@ -54,7 +54,7 @@ npm install -s @emurgo/cardano-serialization-lib-nodejs
 
 Check the [examples section](examples/README.md) to learn how you can create **Unimatrix Sync** instances on frontend and backend to build multi-signature dapps and services.
 
-- [React Example](examples/react): 4 use cases in 1 dapp ([Live Demo](https://unimatrix-node.netlify.app/))
+- [React Example](examples/react): 4 use cases in 1 dapp ([Live Demo](https://unimatrix-live-demo.netlify.app/))
 - [NodeJS Example](examples/nodejs): signing bot service
 
 ### React Dapp
@@ -275,7 +275,7 @@ The next *gcscript* code snippet shows some of the *Unimatrix Sync* and *Roundta
 
 ```
 
-For learning how to build dapps and backends using the **Universal Dapp Connector**, visit it's [General Documentation](https://github.com/GameChangerFinance/gamechanger.wallet/tree/main/docs). You can learn more about it's **SignTxs API** [here](https://beta-wallet.gamechanger.finance/doc/api/v2/signTxs.html).
+For learning how to build dapps and backends using the **Universal Dapp Connector**, visit it's [General Documentation](https://github.com/GameChangerFinance/gamechanger.wallet/tree/main/docs). You can learn more about it's **SignTxs API** [here](https://wallet.gamechanger.finance/doc/api/v2/signTxs.html).
 
 Check the examples, specially the [React Example](examples/react) for a complete client side dapp (more specifically, a signing bot) [using the Universal Dapp Connector](examples/react/src/app/services/gcscripts.ts#L127).
 
