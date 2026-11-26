@@ -7,3 +7,7 @@ strictDepBuilds: true
 allowBuilds: {}
 ignoreScripts: true
 verifyDepsBeforeRun: error
+
+overrides:
+  # Node 20 typings pin an older trust-rejected patch; keep the reviewed 6.x types.
+  "@types/node@20.19.43>undici-types": "6.29.1"

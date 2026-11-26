@@ -14,6 +14,9 @@
 
 ### Fixed
 
+- Replace CI trust-rejected `semver@6.3.1` and `undici-types@6.21.0` resolutions with `semver@6.3.2` and a scoped `undici-types@6.29.1` override; preserve trust and release-age policies.
+- Upgrade checkout/setup-node actions to Node-24-based v6 releases and pnpm/action-setup to v5; keep all matrix jobs running after an individual failure.
+
 - Fix React dev-server native canvas dependency leakage by upgrading `@gamechanger-finance/gc` to 1.2.6 and selecting its browser entry explicitly. Add a Jest dev-optimizer and browser URL-encoding regression test; retain a release-age exception restricted to GC 1.2.6.
 
 - Add a packed three-node transaction/signature exchange across CommonJS, ESM and a real browser, with independent signers and a local relay; cover a three-transaction broadcast with five signatures per signer node per transaction.

@@ -12,3 +12,7 @@ overrides:
   "@commitlint/is-ignored@13.2.0>semver": "^7.8.6"
   # Keep the optional ts-node peer snapshot on its compatible diff security patch.
   "ts-node@9.1.1>diff": "^4.0.4"
+  # Node 20 typings pin an older trust-rejected patch; keep the reviewed 6.x types.
+  "@types/node@20.19.43>undici-types": "6.29.1"
+  # Existing Babel/Istanbul snapshots retain 6.3.1 after update/dedupe; enforce the compatible patch.
+  "semver@>=6 <7": "^6.3.2"
