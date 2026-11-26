@@ -32,6 +32,7 @@
     "@gamechanger-finance/unimatrix": "file:../..",
     "bip39": "^3.1.0",
     "dotenv": "^16.4.5",
-    "gun": "^0.2020.1239"
-  }
+    "gun": "^0.2020.1241"
+  },
+  "packageManager": "pnpm@11.25.0"
 }

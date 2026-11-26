@@ -1,0 +1,14 @@
+packages: []
+minimumReleaseAge: 10080
+trustPolicy: no-downgrade
+blockExoticSubdeps: true
+verifyStoreIntegrity: true
+strictDepBuilds: true
+allowBuilds: {}
+ignoreScripts: true
+verifyDepsBeforeRun: error
+overrides:
+  # Commitlint 13 pins this vulnerable version exactly; retain patched 7.x.
+  "@commitlint/is-ignored@13.2.0>semver": "^7.8.6"
+  # Keep the optional ts-node peer snapshot on its compatible diff security patch.
+  "ts-node@9.1.1>diff": "^4.0.4"

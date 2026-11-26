@@ -1,0 +1,12 @@
+packages: []
+minimumReleaseAge: 10080
+trustPolicy: no-downgrade
+blockExoticSubdeps: true
+verifyStoreIntegrity: true
+strictDepBuilds: true
+allowBuilds: {}
+ignoreScripts: true
+verifyDepsBeforeRun: error
+# Approved exception for the GC browser-runtime fix; applies to this release only.
+minimumReleaseAgeExclude:
+  - '@gamechanger-finance/gc@1.2.6'

@@ -1,3 +1,4 @@
+/// <reference types="node" preserve="true" />
 /**
  * A set of helpers to standardize a basic data exchange protocol 
  * to share **Cardano** transactions and signatures using **Unimatrix**
@@ -51,7 +52,7 @@ export const NONCE_SIZE         = 12
  */
 export type CardanoSerializationLib = any;
 
-export function randomBytes(size:number) {
+export function randomBytes(size:number):Buffer {
     if(typeof crypto?.getRandomValues !=='function'){
         if(typeof window?.crypto?.getRandomValues ==='function')
             return Buffer.from(window.crypto.getRandomValues(new Uint8Array(size)))
@@ -285,7 +286,7 @@ export const onVkWitnessHex=async (args:{
     networkTag:NetworkTag,
     txHash:string,
     vkHash:string,
-    timeout?:number,
+    timeout?:number|undefined,
     cb:(args:{
         vkWitnessHex?:string,
         store?:UnimatrixDataStore,
@@ -438,7 +439,7 @@ export const onTxHex=async (args:{
     dltTag:DLTTag,
     networkTag:NetworkTag,
     txHash:string,
-    timeout?:number,
+    timeout?:number|undefined,
     cb:(args:{
         txHex?:string,
         store?:UnimatrixDataStore,
@@ -585,8 +586,8 @@ export const onTxHashes=async (args:{
     id:string,
     dltTag:DLTTag,
     networkTag:NetworkTag,
-    subPath?:string[],
-    timeout?:number,
+    subPath?:string[]|undefined,
+    timeout?:number|undefined,
     cb:(args:{
         txHashes?:string[],
         store?:UnimatrixDataStore,

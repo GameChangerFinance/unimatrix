@@ -36,17 +36,17 @@ Originally created for **GameChanger Wallet** and targeted but not limited to th
 To install the library on your project:
 
 ```bash
-npm install -s @gamechanger-finance/unimatrix
+pnpm add @gamechanger-finance/unimatrix
 ```
 ### Dependencies
-To install the dependencies, use npm. Check [examples directory](/examples/) for more details on how you can import them.
+To install the dependencies, use pnpm. Check [examples directory](/examples/) for more details on how you can import them.
 
 ```bash
-npm install -s gun 
+pnpm add gun
 # on browser:
-npm install -s @emurgo/cardano-serialization-lib-browser
+pnpm add @emurgo/cardano-serialization-lib-browser
 # on nodeJs:
-npm install -s @emurgo/cardano-serialization-lib-nodejs
+pnpm add @emurgo/cardano-serialization-lib-nodejs
 
 ```
 
@@ -83,7 +83,7 @@ import Gun from 'gun';
 
 import * as CSLib from '@emurgo/cardano-serialization-lib-browser';// on browser
 // or
-import * as CSLib from '@emurgo/cardano-serialization-lib-nodejs'; // on nodeJs
+// import * as CSLib from '@emurgo/cardano-serialization-lib-nodejs'; // on nodeJs
 
 
 // Initialize GunDB connection pointing to the same relay peers on all your signing/listening nodes
@@ -112,13 +112,13 @@ CardanoSync.onTxHashes({
     id: "multisig_1234",
     dltTag: "cardano",
     networkTag: "mainnet",
-    subPath: "signTxs",
+    subPath: ["signTxs"],
     // callback that gets fired on each broadcasted transaction group:
     cb:async ({txHashes,stop})=>{
-        for (const txHash of txHashes) {
+        for (const txHash of txHashes ?? []) {
             console.log(`Received announcement for transaction ${txHash}`)
         }
-    }),
+    },
 });
 
 ```
@@ -149,7 +149,7 @@ const params={
     id: "multisig_1234",
     dltTag: "cardano",
     networkTag: "mainnet",
-    subPath: "signTxs",
+    subPath: ["signTxs"],
 };
 
 // a transaction is built and lacks some/all of it's signatures or key witnesses
@@ -161,7 +161,7 @@ const {txHash,txHex,vkHash}=theoreticalTxBuilder();
 // the hash of the transaction is announced on the channel
 await CardanoSync.setTxHashes({...params,txHashes:[txHash]});
 //the txHex CBOR is uploaded on the channel for other nodes to sign it
-await CardanoSync.setTxHex({...params,txHex});
+await CardanoSync.setTxHex({...params,txHash,txHex});
 //awaits for the incoming signature or key witness of the key hash `vkHash`
 const {vkWitnessHex}=await CardanoSync.getVkWitnessHex({...params,txHash,vkHash});
 
@@ -175,7 +175,7 @@ A node that awaits for transaction announcements on a channel, signs and share b
 1. awaits for transaction announcements
 2. downloads the specific transaction 
 3. signs the transaction
-3. upload the specific signature
+4. upload the specific signature
 
 ```typescript
 // common channel between the 2 instances
@@ -187,7 +187,7 @@ const params={
     id: "multisig_1234",
     dltTag: "cardano",
     networkTag: "mainnet",
-    subPath: "signTxs",
+    subPath: ["signTxs"],
 };
 
 // awaits for announced transactions on the channel
@@ -195,25 +195,31 @@ CardanoSync.onTxHashes({
     ...params,
     // callback that gets fired on each announced transaction group:
     cb:async ({txHashes,stop})=>{
-        for (const txHash of txHashes) {
+        for (const txHash of txHashes ?? []) {
             console.log(`Received announcement for transaction ${txHash}`);
             // getter that downloads the transaction CBOR in hexadecimal encoding
             const {txHex}=await CardanoSync.getTxHex({...params,txHash});
+            if (!txHex) continue; // No valid transaction was retrieved.
 
             //node evaluates signing the transaction and signs using the key with hash `vkHash`, producing `vkWitnessHex`, a transaction key witness in hexadecimal encoding
             const {vkHash,vkWitnessHex}=theoreticalTxSign(txHex);
 
             // setter that uploads the transaction witness
-            await CardanoSync.setVkWitnessHex({...params,txHash,txHex,vkHash,vkWitnessHex});
+            await CardanoSync.setVkWitnessHex({...params,txHash,vkHash,vkWitnessHex});
             console.log(`Signature shared: ${vkWitnessHex}`);
         }
-    }),
+    },
 });
 
 ```
 
 For more examples, visit the [examples directory](examples/).
 
+
+**Note:** The TypeScript library accepts path segments as an array, for example
+`subPath: ["signTxs"]`. The wallet's GCScript plugin instead accepts a
+slash-separated string in `announceTxHashesSubPath`, for example `"signTxs"`
+or `"transactions/mints"` (equivalent to `["transactions", "mints"]`).
 
 ### Universal Dapp Connector
 
@@ -289,15 +295,14 @@ Check the full list on the [API documentation](docs/README.md) pages.
 To run the tests, use the following commands:
 
 ```bash
-npm test
+pnpm test
 ```
 
 For test coverage:
 
 ```bash
-npm run test:cov
+pnpm run test:cov
 ```
-
 
 You can find the tests in the [test directory](test/).
 
@@ -306,10 +311,10 @@ You can find the tests in the [test directory](test/).
 
 ### Install
 
-Install with npm:
+Install with pnpm 11.25.0 and Node.js 22 or 24:
 
 ```bash
-npm i
+pnpm install --frozen-lockfile --ignore-scripts
 ```
 
 ### Build
@@ -317,50 +322,47 @@ npm i
 Build production (distribution) files in your **dist** folder:
 
 ```bash
-npm run build
+pnpm run build
 ```
 
-### Try it locally
-
-Run:
+### Check package consumers
 
 ```bash
-npm link
+pnpm test --runTestsByPath test/package.test.js
 ```
 
-[npm link](https://docs.npmjs.com/cli/v6/commands/npm-link) will create a symlink in the global folder, which may be **{prefix}/lib/node_modules/@gamechanger-finance/unimatrix** or **C:\Users\<username>\AppData\Roaming\npm\node_modules\@gamechanger-finance/unimatrix**.
+The standalone examples have independent lockfiles. Run
+`pnpm install --frozen-lockfile --ignore-scripts` inside each example after building
+the library. Run `pnpm --dir examples/react build` to verify the browser example.
 
-Create an empty folder elsewhere, you don't even need to `npm init` (to generate **package.json**). Open the folder with VS Code, open a terminal and just run:
+### Dependency security
 
-```bash
-npm link @gamechanger-finance/unimatrix
-```
+Keep the committed lockfiles and pnpm policies. Dependency lifecycle scripts are
+disabled; releases must be at least seven days old, registry trust cannot downgrade,
+and exotic transitive sources are blocked. Review package ownership, source,
+release dates, advisories, and lockfile integrity before accepting changes. Do not
+weaken policy or run remote install scripts to work around an install failure.
 
-This will create a symbolic link from globally-installed @gamechanger-finance/unimatrix to **node_modules/** of the current folder.
+### Release
 
-You can then create a, for example, **example.ts** file with the content:
+Release from `master` after review. Run frozen installs, unit and relay tests,
+`pnpm run package`, `pnpm test`, and both standalone example checks.
+Audit the repository with `pnpm audit --json`, runtime dependencies with
+`pnpm audit --prod --json`, and each standalone example with `pnpm audit --json`.
+Review unresolved findings before publication.
 
-```ts
-
-import { ... } from '@gamechanger-finance/unimatrix'
-...
-
-```
-
-If you don't see any linting errors in VS Code, if you can use library functions in your code, then it's all good.
-
-Whenever you want to uninstall the globally-installed @gamechanger-finance/unimatrix and remove the symlink in the global folder, run:
-
-```bash
-npm uninstall @gamechanger-finance/unimatrix -g
-```
+Pushing an approved `v<package-version>` tag triggers the Release & Publish
+workflow. It validates the tag version, tests and builds the package, checks the
+packed consumers and examples, then publishes to the public npm registry using `NPM_TOKEN`.
+Create and push release tags only after approval; do not publish a second copy
+manually. A tag or GitHub release alone does not confirm registry publication.
 
 ### Generate docs
 
 For generating/updating markdown Typescript API docs with *typedoc*:
 
 ```bash
-npm run docs
+pnpm run docs
 ```
 
 ## Contributing

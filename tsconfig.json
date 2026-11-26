@@ -1,5 +1,10 @@
 {
   "compilerOptions": {
+    "module": "commonjs",
+    "rootDir": "./src",
+    "types": ["node"],
+    // Preserve ES5 output and existing resolution semantics while using TypeScript 6.
+    "ignoreDeprecations": "6.0",
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
 
     /* Basic Options */

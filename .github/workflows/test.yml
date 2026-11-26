@@ -2,41 +2,34 @@ name: Test
 
 on:
   push:
-    paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - 'LICENSE'
-      - '.editorconfig'
-    branches:
-      - main
-      - master
+    branches: [master]
   pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - 'LICENSE'
-      - '.editorconfig'
-    branches:
-      - main
-      - master
+    branches: [master]
+
+permissions:
+  contents: read
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os:
-          - ubuntu-latest
-          # - windows-latest # disabled because of dummy GunDb bugs with temporal files on Windows
-        node: [18.x, 19.x, 20.x]
-
+        node: [18.x, 19.x, 20.x, 22.x, 24.x]
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          standalone: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ matrix.node }}
-      - name: Install modules
-        run: yarn
-      - name: Run tests
-        run: yarn test
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm --dir examples/nodejs install --frozen-lockfile --ignore-scripts
+      - run: pnpm --dir examples/react install --frozen-lockfile --ignore-scripts
+      - name: Run complete Jest suite
+        run: pnpm test
+        timeout-minutes: 8
+      - run: pnpm pack
+      - run: pnpm --dir examples/react build

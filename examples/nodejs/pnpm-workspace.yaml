@@ -1,0 +1,9 @@
+packages: []
+minimumReleaseAge: 10080
+trustPolicy: no-downgrade
+blockExoticSubdeps: true
+verifyStoreIntegrity: true
+strictDepBuilds: true
+allowBuilds: {}
+ignoreScripts: true
+verifyDepsBeforeRun: error
