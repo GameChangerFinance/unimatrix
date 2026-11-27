@@ -4,7 +4,7 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 
-test('React dev server optimizes browser dependencies and encodes wallet URLs in Chrome', async () => {
+test('React builds for production, optimizes browser dependencies and encodes wallet URLs in Chrome', async () => {
   const root = path.resolve(__dirname, '..')
   const installedLibrary = path.join(root, 'examples/react/node_modules/@gamechanger-finance/unimatrix')
   expect(path.relative(root, fs.realpathSync(installedLibrary))).toBe('')
@@ -20,6 +20,9 @@ test('React dev server optimizes browser dependencies and encodes wallet URLs in
     const require = createRequire(path.join(example, 'package.json'));
     fs.symlinkSync(path.join(example,'node_modules'),path.join(temporary,'node_modules'),'dir');
     const vite = await import(pathToFileURL(path.join(path.dirname(require.resolve('vite/package.json')), 'dist/node/index.js')));
+    const production = await vite.build({root:example, logLevel:'silent', publicDir:false, build:{write:false}});
+    const chunks = production.output.filter(item => item.type === 'chunk');
+    if (!chunks.length || chunks.some(chunk => [...chunk.imports, ...chunk.dynamicImports].some(id => id.includes('vite-plugin-node-polyfills/shims/')))) throw Error('Production build left unresolved polyfill imports');
     let gc;
     const fixture = server => { server.middlewares.use('/__browser-check', (_req,res) => {
       res.setHeader('Content-Type','text/html');

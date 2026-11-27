@@ -1,7 +1,7 @@
 // Runs unchanged in independent Node.js processes and the real browser bundle.
 async function participate(api, CSL, Gun, config, report) {
   const db = Gun({ peers: [config.relay], radisk: false, localStorage: false, multicast: false, axe: false })
-  const params = { CSL, db, id: config.id, dltTag: 'cardano', networkTag: 'preprod', subPath: ['packed-e2e'], timeout: 30000 }
+  const params = { CSL, db, id: config.id, dltTag: 'cardano', networkTag: 'preprod', subPath: ['packed-e2e'], timeout: config.timeoutMs }
   if (config.role === 'signer') {
     const keys = Array.from({ length: Math.max(...config.signaturesPerNode) }, () => CSL.PrivateKey.generate_ed25519())
     const vkHashes = keys.map(key => key.to_public().hash().to_hex())
@@ -16,6 +16,7 @@ async function participate(api, CSL, Gun, config, report) {
         if (seen.has(txHash)) continue
         seen.add(txHash)
         try {
+          report({ type: 'progress', stage: `reading transaction ${txHashes.indexOf(txHash) + 1}/${txHashes.length}` })
           const { txHex } = await api.cardano.getTxHex({ ...params, txHash })
           if (!txHex) throw Error('Signer did not receive the transaction')
           const tx = CSL.FixedTransaction.from_hex(txHex)
@@ -23,6 +24,7 @@ async function participate(api, CSL, Gun, config, report) {
           const expectedKeys = vkHashes.slice(0, signaturesPerNode)
           if (!required || required.len() !== signaturesPerNode * 2 || !expectedKeys.every(hash => Array.from({ length: required.len() }, (_, i) => required.get(i).to_hex()).includes(hash))) throw Error('Unexpected required signers')
           for (const key of keys.slice(0, signaturesPerNode)) {
+            report({ type: 'progress', stage: `publishing witness ${keys.indexOf(key) + 1}/${signaturesPerNode} for transaction ${txHashes.indexOf(txHash) + 1}/${txHashes.length}` })
             const vkHash = key.to_public().hash().to_hex()
             const witness = CSL.make_vkey_witness(CSL.TransactionHash.from_hex(txHash), key)
             const result = await api.cardano.setVkWitnessHex({ ...params, txHash, vkHash, vkWitnessHex: witness.to_hex() })

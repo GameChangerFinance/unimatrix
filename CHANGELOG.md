@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- Resolve React's injected browser polyfills from the example when consuming the linked library, and cover production builds in Jest. Prevent headless-browser timer throttling during signing tests and use the existing exchange timeout for participant reads.
 - Use `link:../..` for standalone development examples so rebuilt distribution files remain visible; build the library before example installation in CI and declare React's Gun dependency explicitly.
 
 - Replace CI trust-rejected `semver@6.3.1` and `undici-types@6.21.0` resolutions with `semver@6.3.2` and a scoped `undici-types@6.29.1` override; preserve trust and release-age policies.

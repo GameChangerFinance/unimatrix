@@ -19,8 +19,9 @@ async function main(consumer, timeoutMs = 90000) {
   completion.catch(() => {})
   const ready = new Map()
   const signed = new Set()
+  const progress = new Map()
   let coordinatorStarted = false
-  const config = { id: randomUUID(), role: 'signer', transactionCounts: [1, 3], signaturesPerNode: [1, 5] }
+  const config = { id: randomUUID(), role: 'signer', transactionCounts: [1, 3], signaturesPerNode: [1, 5], timeoutMs }
   const batches = new Map([['esm-signer', new Set()], ['browser', new Set()]])
   let completedResults
   const finishWhenObserved = () => {
@@ -37,6 +38,7 @@ async function main(consumer, timeoutMs = 90000) {
   fs.writeFileSync(path.join(consumer, 'signer-browser.mjs'), `import * as api from '@gamechanger-finance/unimatrix';import * as CSL from '@emurgo/cardano-serialization-lib-browser';import Gun from 'gun/gun.js';import participant from './participant.cjs';fetch('/config').then(r=>r.json()).then(config=>participant.participate(api,CSL,Gun,config,value=>fetch('/events',{method:'POST',body:JSON.stringify(value)}))).catch(error=>fetch('/events',{method:'POST',body:JSON.stringify({type:'error',message:String(error?.message || error)})}));`)
   await new Promise((resolve, reject) => webpack({ mode: 'development', devtool: false, target: 'web', entry: path.join(consumer, 'signer-browser.mjs'), output: { path: consumer, filename: 'signer-browser.js' }, experiments: { asyncWebAssembly: true }, resolve: { mainFields: ['module', 'main'] }, plugins: [new NodePolyfillPlugin()] }, (error, stats) => error || stats.hasErrors() ? reject(Error('E2E browser compilation failed: ' + String(error || stats.toString({all:false,errors:true})).replaceAll(consumer, '<consumer>').replaceAll(process.env.HOME, '<home>'))) : resolve()))
   const onEvent = (node, value) => {
+    if (value.type === 'progress') progress.set(node, value.stage)
     if (value.type === 'error') return fail(Error(`${node}: ${value.message} (published witnesses=${signed.size})`))
     if (value.type === 'signed') {
       signed.add(`${node}:${value.txHash}:${value.vkHash}`)
@@ -107,9 +109,10 @@ async function main(consumer, timeoutMs = 90000) {
     })
     config.relay = `http://127.0.0.1:${port}/gun`
     // The unauthenticated loopback relay carries disposable test transactions only.
-    timer = setTimeout(() => fail(Error(`Three-node exchange timed out (ready=${ready.size}, signed=${signed.size})`)), timeoutMs)
+    timer = setTimeout(() => fail(Error(`Three-node exchange timed out (ready=${ready.size}, signed=${signed.size}; ${[...batches.keys()].map(node => `${node}=${[...signed].filter(key => key.startsWith(node + ':')).length}, stage=${progress.get(node) || 'waiting'}`).join('; ')})`)), timeoutMs)
     launch('signer.mjs', 'esm-signer', config)
-    const chrome = spawn(process.env.CHROME_BIN || 'google-chrome', ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-background-networking', `--user-data-dir=${path.join(consumer, 'e2e-chrome')}`, origin], { stdio: 'ignore' })
+    // Headless signers must keep processing Gun timers when Chrome is backgrounded.
+    const chrome = spawn(process.env.CHROME_BIN || 'google-chrome', ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-background-networking', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', `--user-data-dir=${path.join(consumer, 'e2e-chrome')}`, origin], { stdio: 'ignore' })
     children.push(chrome)
     chrome.on('error', fail)
     await completion
