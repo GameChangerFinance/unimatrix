@@ -5,6 +5,7 @@ const { fork, spawn } = require('child_process')
 const { randomUUID } = require('crypto')
 const webpack = require('webpack')
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin')
+const CLOCK_LEAD_MS = { relay: 1000, participant: 100 }
 
 async function main(consumer, timeoutMs = 90000) {
   if (!Number.isInteger(timeoutMs) || timeoutMs <= 0 || timeoutMs > 90000) throw Error('Invalid E2E timeout')
@@ -21,7 +22,7 @@ async function main(consumer, timeoutMs = 90000) {
   const signed = new Set()
   const progress = new Map()
   let coordinatorStarted = false
-  const config = { id: randomUUID(), role: 'signer', transactionCounts: [1, 3], signaturesPerNode: [1, 5], timeoutMs }
+  const config = { id: randomUUID(), role: 'signer', transactionCounts: [1, 3], signaturesPerNode: [1, 5], timeoutMs, clockLeadMs: CLOCK_LEAD_MS.participant }
   const batches = new Map([['esm-signer', new Set()], ['browser', new Set()]])
   let completedResults
   const finishWhenObserved = () => {
@@ -31,7 +32,9 @@ async function main(consumer, timeoutMs = 90000) {
           ready.get(node).slice(0, config.signaturesPerNode[index]).every(vkHash => signed.has(`${node}:${txHash}:${vkHash}`)))))) finish()
   }
   const participant = fs.readFileSync(path.join(__dirname, 'participant.js'), 'utf8')
-  fs.writeFileSync(path.join(consumer, 'relay.cjs'), `const http=require('http');const Gun=require('gun');const server=http.createServer((req,res)=>res.end());Gun({web:server,peers:[],file:'relay-data',localStorage:false,multicast:false,axe:false});server.listen(0,'127.0.0.1',()=>process.send({port:server.address().port}));`)
+  // Gun can persist future-dated fields without completing their aggregate ACK.
+  // Keep this relay's logical clock ahead of the deliberately skewed participants.
+  fs.writeFileSync(path.join(consumer, 'relay.cjs'), `const http=require('http');const Gun=require('gun');Gun.state.drift=${CLOCK_LEAD_MS.relay};const server=http.createServer((req,res)=>res.end());Gun({web:server,peers:[],file:'relay-data',localStorage:false,multicast:false,axe:false});server.listen(0,'127.0.0.1',()=>process.send({port:server.address().port}));`)
   fs.writeFileSync(path.join(consumer, 'participant.cjs'), participant)
   fs.writeFileSync(path.join(consumer, 'signer.mjs'), `import * as api from '@gamechanger-finance/unimatrix';\nimport CSL from '@emurgo/cardano-serialization-lib-nodejs';\nimport Gun from 'gun';\nimport participant from './participant.cjs';\nprocess.on('message', config => participant.participate(api, CSL, Gun, config, value => process.send(value)).catch(error => process.send({type:'error',message:String(error?.message || error)})));`)
   fs.writeFileSync(path.join(consumer, 'coordinator.cjs'), `const api=require('@gamechanger-finance/unimatrix');const CSL=require('@emurgo/cardano-serialization-lib-nodejs');const Gun=require('gun');const {participate}=require('./participant.cjs');process.on('message', config => participate(api,CSL,Gun,config,value=>process.send(value)).catch(error=>process.send({type:'error',message:String(error?.message || error)})));`)
@@ -112,7 +115,7 @@ async function main(consumer, timeoutMs = 90000) {
     timer = setTimeout(() => fail(Error(`Three-node exchange timed out (ready=${ready.size}, signed=${signed.size}; ${[...batches.keys()].map(node => `${node}=${[...signed].filter(key => key.startsWith(node + ':')).length}, stage=${progress.get(node) || 'waiting'}`).join('; ')})`)), timeoutMs)
     launch('signer.mjs', 'esm-signer', config)
     // Headless signers must keep processing Gun timers when Chrome is backgrounded.
-    const chrome = spawn(process.env.CHROME_BIN || 'google-chrome', ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-background-networking', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', `--user-data-dir=${path.join(consumer, 'e2e-chrome')}`, origin], { stdio: 'ignore' })
+    const chrome = spawn(process.env.CHROME_BIN || 'google-chrome', ['--headless=new', '--no-sandbox', '--disable-gpu', '--disable-background-networking', '--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows', `--user-data-dir=${fs.mkdtempSync(path.join(consumer, 'e2e-chrome-'))}`, origin], { stdio: 'ignore' })
     children.push(chrome)
     chrome.on('error', fail)
     await completion

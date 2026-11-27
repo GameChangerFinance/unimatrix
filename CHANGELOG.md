@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- Control relay and participant clocks in packed signing tests to avoid Gun's future-timestamp acknowledgement stall on CI.
 - Resolve React's injected browser polyfills from the example when consuming the linked library, and cover production builds in Jest. Prevent headless-browser timer throttling during signing tests and use the existing exchange timeout for participant reads.
 - Use `link:../..` for standalone development examples so rebuilt distribution files remain visible; build the library before example installation in CI and declare React's Gun dependency explicitly.
 

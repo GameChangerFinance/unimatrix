@@ -1,5 +1,6 @@
 // Runs unchanged in independent Node.js processes and the real browser bundle.
 async function participate(api, CSL, Gun, config, report) {
+  Gun.state.drift = config.clockLeadMs
   const db = Gun({ peers: [config.relay], radisk: false, localStorage: false, multicast: false, axe: false })
   const params = { CSL, db, id: config.id, dltTag: 'cardano', networkTag: 'preprod', subPath: ['packed-e2e'], timeout: config.timeoutMs }
   if (config.role === 'signer') {
