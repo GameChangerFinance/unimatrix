@@ -1,0 +1,16 @@
+packages: []
+minimumReleaseAge: 10080
+trustPolicy: no-downgrade
+blockExoticSubdeps: true
+verifyStoreIntegrity: true
+strictDepBuilds: true
+allowBuilds: {}
+ignoreScripts: true
+verifyDepsBeforeRun: error
+# Approved exception for the GC browser-runtime fix; applies to this release only.
+minimumReleaseAgeExclude:
+  - '@gamechanger-finance/gc@1.2.6'
+
+overrides:
+  # Node 20 typings pin an older trust-rejected patch; keep the reviewed 6.x types.
+  "@types/node@20.19.43>undici-types": "6.29.1"

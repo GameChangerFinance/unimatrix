@@ -1,6 +1,11 @@
 import Gun ,{IGunInstance} from 'gun';
 import { UnimatrixDB } from '../src/common';
-import {exec} from 'child_process';
+import { mkdtempSync, lstatSync, readdirSync, rmSync, existsSync, realpathSync } from 'fs';
+import { tmpdir } from 'os';
+import { join, dirname, basename } from 'path';
+
+const testDirectory = mkdtempSync(join(realpathSync(tmpdir()), 'unimatrix-test-'));
+const testData = join(testDirectory, 'data');
 
 console.log=()=>{};
 
@@ -13,26 +18,6 @@ export function getRandomInt(min:number, max:number) {
 }
 
 
-/**
- * Executes a shell command and return it as a Promise.
- * @param cmd {string}
- * @return {Promise<string>}
- */
-function execShellCommand(cmd:string) {
-    return new Promise((resolve, reject) => {
-        exec(cmd, (error, stdout, stderr) => {
-            if(error) 
-                console.error(error);
-            if(stdout)
-                console.info(stdout);
-            if(stderr)
-                console.warn(stderr);
-            resolve(stdout? stdout : stderr);
-        });
-    });
-}
-
-
 let db:UnimatrixDB;
 
 export const testDb=()=>{
@@ -41,6 +26,7 @@ export const testDb=()=>{
         return db;
     try{
         db = new Gun({
+            file: testData,
             peers:[
                 //"http://localhost:8765/gun",
                 "https://unimatrix01.gamechanger.finance/gun"
@@ -59,5 +45,17 @@ export const testDb=()=>{
     return db;
 }
 
-export const cleanDb=()=>execShellCommand('tools/gunCleanup.sh');
+export const cleanDb=async () => {
+    if (dirname(testDirectory) !== realpathSync(tmpdir()) || !basename(testDirectory).startsWith('unimatrix-test-') || realpathSync(testDirectory) !== testDirectory) {
+        throw new Error('Refusing cleanup outside disposable Unimatrix test data');
+    }
+    const check = (target:string):void => {
+        if (lstatSync(target).isSymbolicLink()) throw new Error('Refusing symlinked test data');
+        if (lstatSync(target).isDirectory()) readdirSync(target).forEach(name => check(join(target, name)));
+    };
+    if (existsSync(testData)) {
+        check(testData);
+        rmSync(testData, { recursive:true });
+    }
+};
 

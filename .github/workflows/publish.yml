@@ -2,51 +2,54 @@ name: Release & Publish
 
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
+
+permissions:
+  contents: read
 
 jobs:
-  release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          draft: false
-          prerelease: false
-
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Setup .npmrc file to publish to npm
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-          node-version: '20.x'
-          registry-url: 'https://registry.npmjs.org'
-      - name: Install modules
-        run: npm install
-      - name: Build
-        run: npm run build
-      - name: Publish to npm
-        run: npm publish --access public
+          fetch-depth: 0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.x'
+          registry-url: https://registry.npmjs.org/
+          cache: pnpm
+      - name: Validate release tag
+        run: node -e "if(process.env.GITHUB_REF_NAME !== 'v' + require('./package.json').version) process.exit(1)"
+      - name: Require release commit on master
+        run: git merge-base --is-ancestor HEAD origin/master
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm run build
+      - run: pnpm --dir examples/nodejs install --frozen-lockfile --ignore-scripts
+      - run: pnpm --dir examples/react install --frozen-lockfile --ignore-scripts
+      - name: Run complete Jest suite
+        run: pnpm test
+        timeout-minutes: 12
+      - run: pnpm pack
+      - run: pnpm --dir examples/react build
+      - run: pnpm audit --prod --audit-level=low
+      - name: Publish verified tarball
+        run: |
+          package_version=$(node -p "require('./package.json').version")
+          pnpm publish "./gamechanger-finance-unimatrix-${package_version}.tgz" --access public --ignore-scripts --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      # - name: Setup .npmrc file to publish to GitHub Packages
-      #   uses: actions/setup-node@v1
-      #   with:
-      #     node-version: '20.x'
-      #     registry-url: 'https://npm.pkg.github.com'
-      #     scope: '@gamechanger-finance'
-      # - run: npm run addscope
-      # - name: Publish to GitHub Packages
-      #   run: npm publish
-      #   env:
-      #     NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Create GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --verify-tag --notes-file CHANGELOG.md
+        env:
+          GH_TOKEN: ${{ github.token }}

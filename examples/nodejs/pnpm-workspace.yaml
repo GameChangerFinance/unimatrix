@@ -1,0 +1,13 @@
+packages: []
+minimumReleaseAge: 10080
+trustPolicy: no-downgrade
+blockExoticSubdeps: true
+verifyStoreIntegrity: true
+strictDepBuilds: true
+allowBuilds: {}
+ignoreScripts: true
+verifyDepsBeforeRun: error
+
+overrides:
+  # Node 20 typings pin an older trust-rejected patch; keep the reviewed 6.x types.
+  "@types/node@20.19.43>undici-types": "6.29.1"

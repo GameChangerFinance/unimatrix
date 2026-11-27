@@ -1,0 +1,97 @@
+{
+  "exports": {
+    "cardano": {
+      "type": "object"
+    },
+    "genDataKey": {
+      "type": "function",
+      "arity": 1
+    },
+    "getData": {
+      "type": "function",
+      "arity": 1
+    },
+    "onData": {
+      "type": "function",
+      "arity": 1
+    },
+    "setData": {
+      "type": "function",
+      "arity": 1
+    }
+  },
+  "cardano": {
+    "cardanoValidatorsFactory": {
+      "type": "function",
+      "arity": 1
+    },
+    "decryptDataFactory": {
+      "type": "function",
+      "arity": 1
+    },
+    "encryptDataFactory": {
+      "type": "function",
+      "arity": 1
+    },
+    "genTxHashesKey": {
+      "type": "function",
+      "arity": 1
+    },
+    "genTxHexKey": {
+      "type": "function",
+      "arity": 1
+    },
+    "genUnimatrixIdFromTxHashes": {
+      "type": "function",
+      "arity": 1
+    },
+    "genVkWitnessHexKey": {
+      "type": "function",
+      "arity": 1
+    },
+    "getTxHashes": {
+      "type": "function",
+      "arity": 1
+    },
+    "getTxHex": {
+      "type": "function",
+      "arity": 1
+    },
+    "getVkWitnessHex": {
+      "type": "function",
+      "arity": 1
+    },
+    "onTxHashes": {
+      "type": "function",
+      "arity": 1
+    },
+    "onTxHex": {
+      "type": "function",
+      "arity": 1
+    },
+    "onVkWitnessHex": {
+      "type": "function",
+      "arity": 1
+    },
+    "setTxHashes": {
+      "type": "function",
+      "arity": 1
+    },
+    "setTxHex": {
+      "type": "function",
+      "arity": 1
+    },
+    "setVkWitnessHex": {
+      "type": "function",
+      "arity": 1
+    }
+  },
+  "declarations": {
+    "common.d.ts": "1c5639dd77b378f36d7e227a661e18ee79fbdc3d728bf023b6f8ae4fe0db4f45",
+    "index.d.ts": "cd778291c7a23511fc6295ecd19f913feaeeaa1cb884f672ed2c3df2ffe16b84",
+    "sync/CSL.d.ts": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sync/cardano.d.ts": "0fcac89ab2d70e20a84ce1dd6c049bf0d4e62109c2584f8117f7f75903cc2194",
+    "sync/index.d.ts": "d54df4aaf0cbe6a8114c0ba0c49e4313464528787927f217f33361e3c359af93",
+    "unimatrix.d.ts": "ea8737d6be5b0661be0bfbf1a7e49d2a1ad83bbaffb35636ef88becc72ac0375"
+  }
+}

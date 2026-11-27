@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import gc from '@gamechanger-finance/gc'
+import gc from '@gamechanger-finance/gc/dist/browser.js'
 
 /**
  * Customizable GameChanger dapp connection launcher button
