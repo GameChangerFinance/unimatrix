@@ -14,6 +14,8 @@
 
 ### Fixed
 
+- Use `link:../..` for standalone development examples so rebuilt distribution files remain visible; build the library before example installation in CI and declare React's Gun dependency explicitly.
+
 - Replace CI trust-rejected `semver@6.3.1` and `undici-types@6.21.0` resolutions with `semver@6.3.2` and a scoped `undici-types@6.29.1` override; preserve trust and release-age policies.
 - Upgrade checkout/setup-node actions to Node-24-based v6 releases and pnpm/action-setup to v5; keep all matrix jobs running after an individual failure.
 

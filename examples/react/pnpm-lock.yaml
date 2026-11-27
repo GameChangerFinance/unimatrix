@@ -18,8 +18,8 @@ importers:
         specifier: ^1.2.6
         version: 1.2.6
       '@gamechanger-finance/unimatrix':
-        specifier: file:../..
-        version: file:../..
+        specifier: link:../..
+        version: link:../..
       '@mdi/font':
         specifier: ^7.4.47
         version: 7.4.47
@@ -29,6 +29,9 @@ importers:
       cross-fetch:
         specifier: ^4.0.0
         version: 4.1.0
+      gun:
+        specifier: ^0.2020.1241
+        version: 0.2020.1241
       moment:
         specifier: ^2.31.0
         version: 2.31.0
@@ -406,9 +409,6 @@ packages:
     resolution: {integrity: sha512-NanuSAkMGsrtvG5s4HxlkpcdvzZOr4t3ojj7bo/3PgvBxaYK5D6ljdsMFqQQW5CdIUx/iJvcxvl22TNVjpL51w==}
     engines: {node: '>=24.12.0'}
     hasBin: true
-
-  '@gamechanger-finance/unimatrix@file:../..':
-    resolution: {directory: ../.., type: directory}
 
   '@humanwhocodes/config-array@0.13.0':
     resolution: {integrity: sha512-DZLEEqFWQFiyK6h5YIeynKx7JlvCYWL0cImfSRXZ9l4Sg2efkFGTuFf6vzXjK1cq6IYkU+Eg/JizXw+TD2vRNw==}
@@ -1075,10 +1075,6 @@ packages:
   crypto-browserify@3.12.1:
     resolution: {integrity: sha512-r4ESw/IlusD17lgQi1O20Fa3qNnsckR126TdUuBgAu7GBYSIPvdNyONd3Zrxh0xCwA4+6w/TDArBPsMvhur+KQ==}
     engines: {node: '>= 0.10'}
-
-  crypto-js@4.2.0:
-    resolution: {integrity: sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==}
-    deprecated: Active development of CryptoJS has been discontinued. This library is no longer maintained.
 
   css-select@5.2.2:
     resolution: {integrity: sha512-TizTzUddG/xYLA3NXodFM0fSbNizXjOKhqiQQwvhlspadZokn1KDy0NZFS0wuEubIYAV5/c1/lAr0TaaFXEXzw==}
@@ -2833,15 +2829,6 @@ snapshots:
     transitivePeerDependencies:
       - canvas
 
-  '@gamechanger-finance/unimatrix@file:../..':
-    dependencies:
-      '@types/node': 20.19.43
-      crypto-js: 4.2.0
-      gun: 0.2020.1241
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
   '@humanwhocodes/config-array@0.13.0(supports-color@7.2.0)':
     dependencies:
       '@humanwhocodes/object-schema': 2.0.3
@@ -3141,6 +3128,7 @@ snapshots:
   '@types/node@20.19.43':
     dependencies:
       undici-types: 6.29.1
+    optional: true
 
   '@types/normalize-package-data@2.4.4': {}
 
@@ -3487,8 +3475,6 @@ snapshots:
       public-encrypt: 4.0.3
       randombytes: 2.1.0
       randomfill: 1.0.4
-
-  crypto-js@4.2.0: {}
 
   css-select@5.2.2:
     dependencies:
@@ -5103,7 +5089,8 @@ snapshots:
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.1
 
-  undici-types@6.29.1: {}
+  undici-types@6.29.1:
+    optional: true
 
   undici@7.30.2: {}
 

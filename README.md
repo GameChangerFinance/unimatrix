@@ -331,7 +331,8 @@ pnpm run build
 pnpm test --runTestsByPath test/package.test.js
 ```
 
-The standalone examples have independent lockfiles. Run
+The standalone examples have independent lockfiles and link to the library's built
+`dist` directory through `link:../..`. Rebuild the library after changing its code. Run
 `pnpm install --frozen-lockfile --ignore-scripts` inside each example after building
 the library. Run `pnpm --dir examples/react build` to verify the browser example.
 

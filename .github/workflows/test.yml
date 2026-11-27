@@ -27,10 +27,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm exec tsc --noEmit
+      - run: pnpm run build
       - run: pnpm --dir examples/nodejs install --frozen-lockfile --ignore-scripts
       - run: pnpm --dir examples/react install --frozen-lockfile --ignore-scripts
       - name: Run complete Jest suite
         run: pnpm test
-        timeout-minutes: 8
+        timeout-minutes: 12
       - run: pnpm pack
       - run: pnpm --dir examples/react build

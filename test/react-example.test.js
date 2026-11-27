@@ -6,6 +6,8 @@ const path = require('path')
 
 test('React dev server optimizes browser dependencies and encodes wallet URLs in Chrome', async () => {
   const root = path.resolve(__dirname, '..')
+  const installedLibrary = path.join(root, 'examples/react/node_modules/@gamechanger-finance/unimatrix')
+  expect(path.relative(root, fs.realpathSync(installedLibrary))).toBe('')
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'unimatrix-vite-'))
   // Native Node loads Vite's ESM API; Jest owns this integration test and timeout.
   const script = `
@@ -50,6 +52,8 @@ test('React dev server optimizes browser dependencies and encodes wallet URLs in
       else resolve()
     })
   })
+  const libraryManifest = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'))
+  expect(fs.existsSync(path.join(installedLibrary, libraryManifest.module))).toBe(true)
   const output = await new Promise((resolve, reject) => {
     execFile(process.execPath, ['--input-type=module', '-e', script, path.join(root, 'examples/react'), temporary],
       { cwd: root, timeout: 90000, maxBuffer: 4 * 1024 * 1024 }, (error, stdout, stderr) => {
